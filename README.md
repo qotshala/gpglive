@@ -1,2 +1,0 @@
-# gpglive
-Live
