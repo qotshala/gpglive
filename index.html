@@ -8,49 +8,29 @@
         body { 
             background-color: #000; 
             color: #D4AF37; 
-            font-family: -apple-system, sans-serif;
+            font-family: sans-serif; 
             display: flex; 
             justify-content: center; 
             align-items: center; 
             height: 100vh; 
             margin: 0; 
         }
-        .container { 
-            text-align: center; 
-            width: 90%;
-            max-width: 400px;
-        }
+        .container { text-align: center; width: 90%; max-width: 400px; }
         .card {
             background: #111;
-            border: 1px solid #D4AF37;
-            border-radius: 20px;
-            padding: 25px;
+            border: 2px solid #D4AF37;
+            border-radius: 25px;
+            padding: 30px;
             margin-bottom: 20px;
-            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.1);
         }
-        .label { 
-            font-size: 14px; 
-            color: #888; 
-            text-transform: uppercase; 
-            letter-spacing: 2px;
-            margin-bottom: 5px;
-        }
-        .price { 
-            font-size: 50px; 
-            font-weight: bold; 
-            color: #fff; 
-            margin: 0;
-        }
-        .unit {
-            font-size: 16px;
-            color: #D4AF37;
-            font-weight: bold;
-        }
-        .karat-14 { color: #00ff00; } /* Ngjyra e gjelber per 14KT */
-        .time {
-            font-size: 10px;
-            color: #444;
-            margin-top: 10px;
+        .label { font-size: 14px; color: #888; text-transform: uppercase; margin-bottom: 10px; }
+        .price { font-size: 55px; font-weight: bold; color: #fff; margin: 0; }
+        .unit { font-size: 18px; color: #D4AF37; font-weight: bold; margin-top: 5px; }
+        .karat-14 { color: #00ff00; } 
+        .time { font-size: 11px; color: #444; margin-top: 15px; }
+        button { 
+            background: #222; color: #D4AF37; border: 1px solid #D4AF37; 
+            padding: 10px 20px; border-radius: 50px; cursor: pointer; font-size: 12px;
         }
     </style>
 </head>
@@ -61,46 +41,53 @@
     <div class="card">
         <div class="label">Ari 24 Karat (Bursa)</div>
         <div id="gold24" class="price">...</div>
-        <div class="unit">Euro / Gram (€/g)</div>
+        <div class="unit">€ / Gram</div>
     </div>
 
     <div class="card" style="border-color: #00ff00;">
         <div class="label">Ari 14 Karat (585)</div>
         <div id="gold14" class="price karat-14">...</div>
-        <div class="unit" style="color: #00ff00;">Euro / Gram (€/g)</div>
+        <div class="unit" style="color: #00ff00;">€ / Gram</div>
     </div>
 
-    <div id="updateTime" class="time">Duke u përditësuar...</div>
+    <button onclick="fetchGold()">Rifresko</button>
+    <div id="updateTime" class="time">Duke u lidhur...</div>
 </div>
 
 <script>
     async function fetchGold() {
+        const timeDisplay = document.getElementById('updateTime');
+        timeDisplay.innerText = "Duke u përditësuar...";
+
         try {
-            // Marrim cmimin nga Coinbase (XAU-EUR)
-            const response = await fetch('https://api.coinbase.com/v2/prices/XAU-EUR/spot');
-            const result = await response.json();
+            // Përdorim një PROXY që të mos bllokohet nga telefoni
+            const proxy = "https://api.allorigins.win/get?url=";
+            const target = encodeURIComponent("https://api.coinbase.com/v2/prices/XAU-EUR/spot");
+            
+            const response = await fetch(proxy + target);
+            const data = await response.json();
+            const result = JSON.parse(data.contents);
             
             if (result && result.data) {
                 const priceOunce = parseFloat(result.data.amount);
-                const price24 = priceOunce / 31.1035; // Cmimi per gram 24KT
-                const price14 = price24 * 0.585; // Cmimi per gram 14KT (karati 585)
+                const price24 = priceOunce / 31.1035; 
+                const price14 = price24 * 0.585; 
 
                 document.getElementById('gold24').innerText = price24.toFixed(2);
                 document.getElementById('gold14').innerText = price14.toFixed(2);
-                document.getElementById('updateTime').innerText = "LIVE: " + new Date().toLocaleTimeString();
+                timeDisplay.innerText = "Përditësuar: " + new Date().toLocaleTimeString();
             }
         } catch (error) {
-            document.getElementById('gold24').innerText = "!!";
-            document.getElementById('gold14').innerText = "!!";
-            document.getElementById('updateTime').innerText = "Lidhja dështoi. Rifresko faqen.";
+            console.error(error);
+            timeDisplay.innerText = "Lidhja dështoi. Kontrollo internetin.";
         }
     }
 
     // Ekzekuto menjëherë
     fetchGold();
     
-    // Rifresko automatikisht çdo 1 minutë
-    setInterval(fetchGold, 60000);
+    // Rifresko çdo 5 minuta
+    setInterval(fetchGold, 300000);
 </script>
 
 </body>
