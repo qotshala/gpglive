@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GOLD PRICE LIVE</title>
+    <title>GOLD POINT LIVE</title>
     <style>
         body { 
             background-color: #000; 
             color: #D4AF37; 
-            font-family: sans-serif; 
+            font-family: -apple-system, sans-serif;
             display: flex; 
             justify-content: center; 
             align-items: center; 
@@ -17,70 +17,89 @@
         }
         .container { 
             text-align: center; 
-            padding: 30px; 
-            border: 2px solid #D4AF37; 
-            border-radius: 20px; 
-            background: #111;
-            width: 80%;
+            width: 90%;
             max-width: 400px;
+        }
+        .card {
+            background: #111;
+            border: 1px solid #D4AF37;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.1);
         }
         .label { 
             font-size: 14px; 
             color: #888; 
             text-transform: uppercase; 
             letter-spacing: 2px;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
         .price { 
-            font-size: 48px; 
+            font-size: 50px; 
             font-weight: bold; 
-            color: #00ff00; 
-            margin: 10px 0;
+            color: #fff; 
+            margin: 0;
         }
         .unit {
-            font-size: 20px;
+            font-size: 16px;
             color: #D4AF37;
+            font-weight: bold;
         }
+        .karat-14 { color: #00ff00; } /* Ngjyra e gjelber per 14KT */
         .time {
             font-size: 10px;
-            color: #555;
-            margin-top: 20px;
+            color: #444;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="label">Çmimi i Arit (Live)</div>
-    <div id="goldPrice" class="price">...</div>
-    <div class="unit">Euro për Gram (€/g)</div>
-    <div id="updateTime" class="time">Duke u lidhur me bursën...</div>
+    
+    <div class="card">
+        <div class="label">Ari 24 Karat (Bursa)</div>
+        <div id="gold24" class="price">...</div>
+        <div class="unit">Euro / Gram (€/g)</div>
+    </div>
+
+    <div class="card" style="border-color: #00ff00;">
+        <div class="label">Ari 14 Karat (585)</div>
+        <div id="gold14" class="price karat-14">...</div>
+        <div class="unit" style="color: #00ff00;">Euro / Gram (€/g)</div>
+    </div>
+
+    <div id="updateTime" class="time">Duke u përditësuar...</div>
 </div>
 
 <script>
     async function fetchGold() {
         try {
-            // Përdorim një API të hapur për çmimet e metaleve
-            const response = await fetch('https://api.gold-api.com/api/v1/gold');
-            const data = await response.json();
+            // Marrim cmimin nga Coinbase (XAU-EUR)
+            const response = await fetch('https://api.coinbase.com/v2/prices/XAU-EUR/spot');
+            const result = await response.json();
             
-            // Çmimi vjen direkt për gram ose ounce, e kthejmë në Euro/Gram
-            // Ky API zakonisht jep çmimin global në USD, e kthejmë me kursin 0.92
-            const priceInUsd = data.price; 
-            const priceInEur = priceInUsd * 0.92;
+            if (result && result.data) {
+                const priceOunce = parseFloat(result.data.amount);
+                const price24 = priceOunce / 31.1035; // Cmimi per gram 24KT
+                const price14 = price24 * 0.585; // Cmimi per gram 14KT (karati 585)
 
-            document.getElementById('goldPrice').innerText = priceInEur.toFixed(2);
-            document.getElementById('updateTime').innerText = "Përditësuar: " + new Date().toLocaleTimeString();
+                document.getElementById('gold24').innerText = price24.toFixed(2);
+                document.getElementById('gold14').innerText = price14.toFixed(2);
+                document.getElementById('updateTime').innerText = "LIVE: " + new Date().toLocaleTimeString();
+            }
         } catch (error) {
-            document.getElementById('goldPrice').innerText = "Error";
-            document.getElementById('updateTime').innerText = "Nuk mund të merren të dhënat";
+            document.getElementById('gold24').innerText = "!!";
+            document.getElementById('gold14').innerText = "!!";
+            document.getElementById('updateTime').innerText = "Lidhja dështoi. Rifresko faqen.";
         }
     }
 
-    // Ekzekutoje menjëherë
+    // Ekzekuto menjëherë
     fetchGold();
     
-    // Rifreskoje çdo 60 sekonda
+    // Rifresko automatikisht çdo 1 minutë
     setInterval(fetchGold, 60000);
 </script>
 
