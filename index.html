@@ -8,41 +8,25 @@
     <style>
         :root { --gold: #BF9B30; --bg: #ffffff; --card: #fdfdfd; --text: #111; --border: #eee; --red: #e74c3c; --green: #27ae60; }
         body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; }
-        
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); padding-bottom: 10px; margin-bottom: 15px; }
         h1 { color: var(--gold); margin: 0; font-size: 1.1rem; text-transform: uppercase; }
-        
         .admin-panel { background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid var(--gold); margin-bottom: 20px; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         input, select { padding: 8px; border: 1px solid #ccc; border-radius: 5px; width: 100%; box-sizing: border-box; font-size: 0.9rem; }
-        
         .btn { border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
         .btn-add { background: var(--gold); color: white; }
         .btn-print { background: #333; color: white; width: auto; padding: 5px 15px; font-size: 0.8rem; }
-        
         .btn-sell { background: var(--green); color: white; border: none; padding: 6px; border-radius: 3px; cursor: pointer; width: 100%; font-weight: bold; }
         .btn-undo { background: #3498db; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; }
         .btn-del { background: var(--red); color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; }
-
         .shop-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
         @media (min-width: 768px) { .shop-grid { grid-template-columns: repeat(3, 1fr); } }
-        
         .column { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .column h2 { color: var(--gold); font-size: 0.9rem; border-bottom: 1px solid var(--border); padding-bottom: 5px; margin-bottom: 10px; }
-
         table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
         th, td { padding: 6px; border-bottom: 1px solid #f0f0f0; text-align: left; }
-        th { background: #f8f8f8; color: #666; font-size: 0.7rem; }
-
         .sold-section { margin-top: 40px; border: 1px solid var(--red); padding: 15px; border-radius: 8px; background: #fffafb; }
-        .sold-section h2 { color: var(--red); font-size: 1rem; margin-top: 0; margin-bottom: 10px; }
-
-        @media print {
-            .admin-panel, .shop-grid, .btn-sell, .btn-undo, .btn-del { display: none !important; }
-            .sold-section { border: none; margin-top: 0; padding: 0; }
-            th:last-child, td:last-child { display: none; }
-            body { background: white; }
-        }
+        @media print { .admin-panel, .shop-grid, .btn-sell, .btn-undo, .btn-del { display: none !important; } .sold-section { border: none; } }
     </style>
 </head>
 <body>
@@ -59,7 +43,7 @@
         <select id="res-typ"><option value="D">Dámský</option><option value="P">Pánský</option></select>
         <input type="text" id="res-mm" placeholder="MM">
         <select id="res-barva"><option value="Žluté">Žluté</option><option value="Bílé">Bílé</option><option value="Rose">Rose</option></select>
-        <input type="number" id="res-vel" placeholder="Velikost">
+        <input type="text" id="res-vel" placeholder="Velikost">
     </div>
     <button class="btn btn-add" id="add-btn" onclick="addItem()">+ PŘIDAT DO SKLADU</button>
 </div>
@@ -79,14 +63,12 @@
 </div>
 
 <script>
-    // --- LIDHJA ME SUPABASE (KODET E TUA) ---
     const S_URL = "https://sudafhyeiyqflupjberp.supabase.co";
     const S_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1ZGFmaHllaXlxZmx1cGpiZXJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDI3NjEsImV4cCI6MjA4OTY3ODc2MX0.7JmqOiSRiBo8qEHOkIhhhZv6I3zURuJdWNhe4x12LIs";
     const _supabase = supabase.createClient(S_URL, S_KEY);
 
     let inventory = [];
 
-    // Ngarkimi i të dhënave nga Cloud
     async function loadData() {
         const { data, error } = await _supabase.from('inventory').select('*').order('id', { ascending: false });
         if (!error) {
@@ -95,48 +77,50 @@
         }
     }
 
-    // Shtimi i unazës së re
     async function addItem() {
         const btn = document.getElementById('add-btn');
-        const item = {
+        const kodVal = document.getElementById('res-kod').value;
+        const velVal = document.getElementById('res-vel').value;
+
+        if(!kodVal || !velVal) return alert("Prosím vyplňte Kód a Velikost!");
+
+        btn.disabled = true;
+        btn.innerText = "Shtimi...";
+
+        // Kjo pjesë i dërgon të dhënat saktë me emrat që ke në Supabase
+        const { error } = await _supabase.from('inventory').insert([{
             shop: document.getElementById('res-shop').value,
-            kod: document.getElementById('res-kod').value,
+            kod: kodVal,
             typ: document.getElementById('res-typ').value,
             mm: document.getElementById('res-mm').value,
             barva: document.getElementById('res-barva').value,
-            vel: parseInt(document.getElementById('res-vel').value),
+            vel: velVal.toString(),
             sold: false
-        };
-
-        if(!item.kod || !item.vel) return alert("Prosím vyplňte Kód a Velikost!");
-
-        btn.disabled = true;
-        const { error } = await _supabase.from('inventory').insert([item]);
+        }]);
         
-        if(!error) {
+        if(error) {
+            alert("GABIM: " + error.message);
+        } else {
             document.getElementById('res-kod').value = '';
             document.getElementById('res-vel').value = '';
             await loadData();
         }
         btn.disabled = false;
+        btn.innerText = "+ PŘIDAT DO SKLADU";
     }
 
-    // Shitja e unazës
     async function sellItem(id) {
         const d = new Date();
         const timeStr = `${d.getDate()}.${d.getMonth()+1}. | ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}`;
-        
         await _supabase.from('inventory').update({ sold: true, sold_time: timeStr }).eq('id', id);
         await loadData();
     }
 
-    // Kthimi në stok (Undo)
     async function undoSell(id) {
         await _supabase.from('inventory').update({ sold: false, sold_time: null }).eq('id', id);
         await loadData();
     }
 
-    // Fshirja përfundimtare
     async function deleteItem(id) {
         if(confirm("Opravdu smazat?")) {
             await _supabase.from('inventory').delete().eq('id', id);
@@ -145,7 +129,6 @@
     }
 
     function render() {
-        // Dyqanet (Stoku)
         ['GPG', 'LBX', 'PALL'].forEach(s => {
             const tbody = document.querySelector(`#table-${s} tbody`);
             tbody.innerHTML = '';
@@ -158,7 +141,6 @@
             });
         });
 
-        // Tabela e të shiturave
         const soldBody = document.querySelector('#table-sold tbody');
         soldBody.innerHTML = '';
         inventory.filter(i => i.sold).forEach(i => {
@@ -175,8 +157,7 @@
         });
     }
 
-    // Refresh automatik çdo 10 sekonda (Real-time)
-    setInterval(loadData, 10000);
+    setInterval(loadData, 5000);
     loadData();
 </script>
 </body>
