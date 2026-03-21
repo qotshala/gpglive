@@ -1,63 +1,95 @@
 <!DOCTYPE html>
-<html lang="cs">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GPG - Manažer Skladu (Cloud)</title>
+    <title>GPG - Inventory Management</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --gold: #BF9B30; --bg: #ffffff; --card: #fdfdfd; --text: #111; --border: #eee; --red: #e74c3c; --green: #27ae60; }
-        body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); padding-bottom: 10px; margin-bottom: 15px; }
-        h1 { color: var(--gold); margin: 0; font-size: 1.1rem; text-transform: uppercase; }
-        .admin-panel { background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid var(--gold); margin-bottom: 20px; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        input, select { padding: 8px; border: 1px solid #ccc; border-radius: 5px; width: 100%; box-sizing: border-box; font-size: 0.9rem; }
-        .btn { border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
-        .btn-add { background: var(--gold); color: white; }
-        .btn-print { background: #333; color: white; width: auto; padding: 5px 15px; font-size: 0.8rem; }
-        .btn-sell { background: var(--green); color: white; border: none; padding: 6px; border-radius: 3px; cursor: pointer; width: 100%; font-weight: bold; }
-        .btn-undo { background: #3498db; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; }
-        .btn-del { background: var(--red); color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; }
-        .shop-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
-        @media (min-width: 768px) { .shop-grid { grid-template-columns: repeat(3, 1fr); } }
-        .column { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .column h2 { color: var(--gold); font-size: 0.9rem; border-bottom: 1px solid var(--border); padding-bottom: 5px; margin-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-        th, td { padding: 6px; border-bottom: 1px solid #f0f0f0; text-align: left; }
-        .sold-section { margin-top: 40px; border: 1px solid var(--red); padding: 15px; border-radius: 8px; background: #fffafb; }
-        @media print { .admin-panel, .shop-grid, .btn-sell, .btn-undo, .btn-del { display: none !important; } .sold-section { border: none; } }
+        :root { --gold: #BF9B30; --bg: #ffffff; --card: #fdfdfd; --text: #111; --border: #eee; --red: #e74c3c; --green: #27ae60; --blue: #3498db; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--gold); padding-bottom: 15px; margin-bottom: 20px; }
+        h1 { color: var(--gold); margin: 0; font-size: 1.4rem; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .admin-panel { background: #fdfdfd; padding: 20px; border-radius: 12px; border: 1px solid #ddd; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+        input, select { padding: 12px; border: 1px solid #ccc; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 1rem; outline: none; }
+        input:focus { border-color: var(--gold); }
+        
+        .btn { border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 15px; transition: 0.3s; font-size: 1rem; }
+        .btn-add { background: var(--gold); color: white; text-transform: uppercase; }
+        .btn-add:hover { background: #a68628; }
+        .btn-print { background: #333; color: white; width: auto; padding: 8px 20px; margin-top: 0; font-size: 0.9rem; }
+        
+        .btn-sell { background: var(--green); color: white; padding: 10px; border-radius: 6px; font-size: 0.9rem; }
+        .btn-undo { background: var(--blue); color: white; padding: 6px 12px; border-radius: 5px; margin-right: 5px; }
+        .btn-del { background: var(--red); color: white; padding: 6px 12px; border-radius: 5px; }
+
+        .shop-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        @media (min-width: 1024px) { .shop-grid { grid-template-columns: repeat(3, 1fr); } }
+        
+        .column { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+        .column h2 { color: var(--gold); font-size: 1.1rem; border-bottom: 2px solid #f9f9f9; padding-bottom: 10px; margin-bottom: 15px; text-align: center; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f8f8f8; color: #777; font-size: 0.75rem; text-transform: uppercase; padding: 10px; text-align: left; }
+        td { padding: 12px 10px; border-bottom: 1px solid #f4f4f4; font-size: 0.95rem; }
+        
+        .model-info b { font-size: 1.05rem; display: block; color: #000; }
+        .model-info small { color: #666; font-size: 0.85rem; }
+
+        .sold-section { margin-top: 50px; border: 2px solid var(--red); padding: 20px; border-radius: 12px; background: #fffafb; }
+        .sold-section h2 { color: var(--red); margin-top: 0; font-size: 1.2rem; }
+
+        @media print {
+            .admin-panel, .shop-grid, .btn-sell, .btn-undo, .btn-del, .btn-print { display: none !important; }
+            .sold-section { border: none; }
+            body { padding: 0; }
+        }
     </style>
 </head>
 <body>
 
 <div class="header">
     <h1>GOLD POINT GROUP</h1>
-    <button class="btn btn-print" onclick="window.print()">🖨️ PRINT RAPORTI</button>
+    <button class="btn btn-print" onclick="window.print()">🖨️ PRINT REPORT</button>
 </div>
 
 <div class="admin-panel">
     <div class="form-row">
-        <select id="res-shop"><option value="GPG">GOLD POINT</option><option value="LBX">MELANTRICHOVA</option><option value="PALL">PALLADIUM</option></select>
-        <input type="text" id="res-kod" placeholder="Kód">
-        <select id="res-typ"><option value="D">Dámský</option><option value="P">Pánský</option></select>
-        <input type="text" id="res-mm" placeholder="MM">
-        <select id="res-barva"><option value="Žluté">Žluté</option><option value="Bílé">Bílé</option><option value="Rose">Rose</option></select>
-        <input type="text" id="res-vel" placeholder="Velikost">
+        <select id="res-shop">
+            <option value="GPG">GOLD POINT</option>
+            <option value="LBX">MELANTRICHOVA</option>
+            <option value="PALL">PALLADIUM</option>
+        </select>
+        <input type="text" id="res-kod" placeholder="Model Code (e.g. 123)">
+        <select id="res-typ">
+            <option value="D">Female (D)</option>
+            <option value="P">Male (P)</option>
+        </select>
+        <input type="text" id="res-mm" placeholder="Width (MM)">
+        <select id="res-barva">
+            <option value="Yellow">Yellow Gold</option>
+            <option value="White">White Gold</option>
+            <option value="Rose">Rose Gold</option>
+            <option value="Yellow & White">Yellow & White</option>
+        </select>
+        <input type="text" id="res-vel" placeholder="Size">
     </div>
-    <button class="btn btn-add" id="add-btn" onclick="addItem()">+ PŘIDAT DO SKLADU</button>
+    <button class="btn btn-add" id="add-btn" onclick="addItem()">+ ADD TO INVENTORY</button>
 </div>
 
 <div class="shop-grid">
-    <div class="column"><h2>GOLD POINT (GPG)</h2><table id="table-GPG"><thead><tr><th>Model</th><th>Vel.</th><th>Akce</th></tr></thead><tbody></tbody></table></div>
-    <div class="column"><h2>MELANTRICHOVA (LBX)</h2><table id="table-LBX"><thead><tr><th>Model</th><th>Vel.</th><th>Akce</th></tr></thead><tbody></tbody></table></div>
-    <div class="column"><h2>PALLADIUM (PALL)</h2><table id="table-PALL"><thead><tr><th>Model</th><th>Vel.</th><th>Akce</th></tr></thead><tbody></tbody></table></div>
+    <div class="column"><h2>GOLD POINT (GPG)</h2><table id="table-GPG"><thead><tr><th>Model</th><th>Size</th><th>Action</th></tr></thead><tbody></tbody></table></div>
+    <div class="column"><h2>MELANTRICHOVA (LBX)</h2><table id="table-LBX"><thead><tr><th>Model</th><th>Size</th><th>Action</th></tr></thead><tbody></tbody></table></div>
+    <div class="column"><h2>PALLADIUM (PALL)</h2><table id="table-PALL"><thead><tr><th>Model</th><th>Size</th><th>Action</th></tr></thead><tbody></tbody></table></div>
 </div>
 
 <div class="sold-section">
-    <h2>🔴 VÝPIS PRODANÝCH (DATA)</h2>
+    <h2>🔴 RECENTLY SOLD</h2>
     <table id="table-sold">
-        <thead><tr><th>Původ</th><th>Model / Barva</th><th>Vel.</th><th>Data e shitjes</th><th>Akce</th></tr></thead>
+        <thead><tr><th>Store</th><th>Model / Color</th><th>Size</th><th>Sold Date</th><th>Action</th></tr></thead>
         <tbody></tbody>
     </table>
 </div>
@@ -71,21 +103,17 @@
 
     async function loadData() {
         const { data, error } = await _supabase.from('inventory').select('*').order('id', { ascending: false });
-        if (!error) {
-            inventory = data;
-            render();
-        }
+        if (!error) { inventory = data; render(); }
     }
 
     async function addItem() {
         const btn = document.getElementById('add-btn');
         const kodVal = document.getElementById('res-kod').value;
         const velVal = document.getElementById('res-vel').value;
-
-        if(!kodVal || !velVal) return alert("Prosím vyplňte Kód a Velikost!");
+        if(!kodVal || !velVal) return alert("Please enter Code and Size!");
 
         btn.disabled = true;
-        btn.innerText = "Duke u shtuar...";
+        btn.innerText = "Adding...";
 
         const { error } = await _supabase.from('inventory').insert([{
             shop: document.getElementById('res-shop').value,
@@ -93,37 +121,38 @@
             typ: document.getElementById('res-typ').value,
             mm: document.getElementById('res-mm').value,
             barva: document.getElementById('res-barva').value,
-            vel: velVal.toString(),
+            vel: velVal,
             sold: false
         }]);
-        
-        if(error) {
-            alert("GABIM: " + error.message);
-        } else {
-            document.getElementById('res-kod').value = '';
-            document.getElementById('res-vel').value = '';
-            await loadData();
+
+        if(error) alert("Error: " + error.message);
+        else { 
+            document.getElementById('res-kod').value = ''; 
+            document.getElementById('res-vel').value = ''; 
+            await loadData(); 
         }
         btn.disabled = false;
-        btn.innerText = "+ PŘIDAT DO SKLADU";
+        btn.innerText = "+ ADD TO INVENTORY";
     }
 
-    async function sellItem(id) {
-        const d = new Date();
-        // Vendos vetem daten: Dita/Muaji/Viti
-        const dataVeq = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
-        
-        await _supabase.from('inventory').update({ sold: true, data_shitjes: dataVeq }).eq('id', id);
-        await loadData();
+    async function sellItem(id, kod, color, size) {
+        if(confirm(`Are you sure you want to SELL this item?\n\nModel: ${kod}\nColor: ${color}\nSize: ${size}`)) {
+            const d = new Date();
+            const dataVeq = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+            await _supabase.from('inventory').update({ sold: true, data_shitjes: dataVeq }).eq('id', id);
+            await loadData();
+        }
     }
 
-    async function undoSell(id) {
-        await _supabase.from('inventory').update({ sold: false, data_shitjes: null }).eq('id', id);
-        await loadData();
+    async function undoSell(id, kod) {
+        if(confirm(`Move model ${kod} back to stock?`)) {
+            await _supabase.from('inventory').update({ sold: false, data_shitjes: null }).eq('id', id);
+            await loadData();
+        }
     }
 
     async function deleteItem(id) {
-        if(confirm("Opravdu smazat?")) {
+        if(confirm("Permanently delete this item? This cannot be undone!")) {
             await _supabase.from('inventory').delete().eq('id', id);
             await loadData();
         }
@@ -135,9 +164,9 @@
             tbody.innerHTML = '';
             inventory.filter(i => i.shop === s && !i.sold).forEach(i => {
                 tbody.innerHTML += `<tr>
-                    <td><b>${i.kod}</b><br><small>${i.barva} ${i.mm}</small></td>
-                    <td><b>${i.vel}</b><br><small>${i.typ === 'D' ? 'D' : 'P'}</small></td>
-                    <td><button class="btn-sell" onclick="sellItem(${i.id})">SHIT</button></td>
+                    <td class="model-info"><b>${i.kod}</b><small>${i.barva} ${i.mm}</small></td>
+                    <td><b>${i.vel}</b><br><small>${i.typ}</small></td>
+                    <td><button class="btn-sell" onclick="sellItem(${i.id}, '${i.kod}', '${i.barva}', '${i.vel}')">SELL</button></td>
                 </tr>`;
             });
         });
@@ -147,18 +176,18 @@
         inventory.filter(i => i.sold).forEach(i => {
             soldBody.innerHTML += `<tr>
                 <td><small>${i.shop}</small></td>
-                <td><b>${i.kod}</b><br><small>${i.barva}</small></td>
+                <td class="model-info"><b>${i.kod}</b><small>${i.barva}</small></td>
                 <td><b>${i.vel}</b></td>
-                <td style="color:#888; font-size:0.7rem">${i.data_shitjes || ''}</td>
+                <td style="color:#888; font-size:0.8rem">${i.data_shitjes || ''}</td>
                 <td>
-                    <button class="btn-undo" onclick="undoSell(${i.id})">↺</button>
+                    <button class="btn-undo" onclick="undoSell(${i.id}, '${i.kod}')">↺</button>
                     <button class="btn-del" onclick="deleteItem(${i.id})">X</button>
                 </td>
             </tr>`;
         });
     }
 
-    setInterval(loadData, 5000);
+    setInterval(loadData, 8000);
     loadData();
 </script>
 </body>
