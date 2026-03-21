@@ -55,9 +55,9 @@
 </div>
 
 <div class="sold-section">
-    <h2>🔴 VÝPIS PRODANÝCH (LIVE CLOUD)</h2>
+    <h2>🔴 VÝPIS PRODANÝCH (DATA)</h2>
     <table id="table-sold">
-        <thead><tr><th>Původ</th><th>Model / Barva</th><th>Vel.</th><th>Čas prodeje</th><th>Akce</th></tr></thead>
+        <thead><tr><th>Původ</th><th>Model / Barva</th><th>Vel.</th><th>Data e shitjes</th><th>Akce</th></tr></thead>
         <tbody></tbody>
     </table>
 </div>
@@ -85,9 +85,8 @@
         if(!kodVal || !velVal) return alert("Prosím vyplňte Kód a Velikost!");
 
         btn.disabled = true;
-        btn.innerText = "Shtimi...";
+        btn.innerText = "Duke u shtuar...";
 
-        // Kjo pjesë i dërgon të dhënat saktë me emrat që ke në Supabase
         const { error } = await _supabase.from('inventory').insert([{
             shop: document.getElementById('res-shop').value,
             kod: kodVal,
@@ -111,13 +110,15 @@
 
     async function sellItem(id) {
         const d = new Date();
-        const timeStr = `${d.getDate()}.${d.getMonth()+1}. | ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}`;
-        await _supabase.from('inventory').update({ sold: true, sold_time: timeStr }).eq('id', id);
+        // Vendos vetem daten: Dita/Muaji/Viti
+        const dataVeq = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+        
+        await _supabase.from('inventory').update({ sold: true, data_shitjes: dataVeq }).eq('id', id);
         await loadData();
     }
 
     async function undoSell(id) {
-        await _supabase.from('inventory').update({ sold: false, sold_time: null }).eq('id', id);
+        await _supabase.from('inventory').update({ sold: false, data_shitjes: null }).eq('id', id);
         await loadData();
     }
 
@@ -148,7 +149,7 @@
                 <td><small>${i.shop}</small></td>
                 <td><b>${i.kod}</b><br><small>${i.barva}</small></td>
                 <td><b>${i.vel}</b></td>
-                <td style="color:#888; font-size:0.7rem">${i.sold_time || ''}</td>
+                <td style="color:#888; font-size:0.7rem">${i.data_shitjes || ''}</td>
                 <td>
                     <button class="btn-undo" onclick="undoSell(${i.id})">↺</button>
                     <button class="btn-del" onclick="deleteItem(${i.id})">X</button>
