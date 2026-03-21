@@ -3,93 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GPG - Kontrola Skladu</title>
+    <title>GPG - Kontrola Skladu (Světlý)</title>
     <style>
-        :root { --gold: #D4AF37; --dark: #0a0a0a; --card: #161616; --text: #e0e0e0; --red: #ff4757; --green: #2ed573; }
-        body { font-family: 'Inter', sans-serif; background: var(--dark); color: var(--text); margin: 0; padding: 20px; }
+        :root { 
+            --gold: #BF9B30; /* Ari pak më i mbyllur për sfond të bardhë */
+            --bg: #ffffff; 
+            --card: #f9f9f9; 
+            --text: #111111; 
+            --border: #dddddd;
+            --red: #d63031; 
+            --green: #27ae60; 
+        }
+        
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
         
         .header-top { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); padding-bottom: 15px; margin-bottom: 20px; }
-        
+        h1 { color: var(--gold); margin: 0; font-size: 1.5rem; text-transform: uppercase; }
+
         /* Sekcia Statistiky */
         .stats-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
-        .stat-card { background: #1a1a1a; padding: 15px; border-radius: 8px; text-align: center; border: 1px solid #333; }
-        .stat-card h4 { margin: 0; color: #888; font-size: 0.8rem; text-transform: uppercase; }
+        .stat-card { background: var(--card); padding: 15px; border-radius: 8px; text-align: center; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .stat-card h4 { margin: 0; color: #666; font-size: 0.8rem; text-transform: uppercase; }
         .stat-card p { margin: 5px 0 0; font-size: 1.8rem; font-weight: bold; }
 
         /* Panel Restock */
-        .admin-panel { background: #1a1a1a; padding: 20px; border-radius: 10px; border: 1px solid var(--gold); margin-bottom: 30px; }
+        .admin-panel { background: #f1f1f1; padding: 20px; border-radius: 10px; border: 1px solid var(--gold); margin-bottom: 30px; }
+        .admin-panel h3 { color: var(--gold); margin-top: 0; font-size: 1rem; }
         .form-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
-        .form-group { display: flex; flex-direction: column; gap: 5px; font-size: 0.8rem; color: var(--gold); }
-        input, select { background: #222; border: 1px solid #444; color: white; padding: 8px; border-radius: 5px; }
+        .form-group { display: flex; flex-direction: column; gap: 3px; font-size: 0.8rem; color: #333; font-weight: bold; }
+        input, select { background: white; border: 1px solid #ccc; color: var(--text); padding: 8px; border-radius: 5px; font-size: 0.9rem; }
+        input:focus, select:focus { border-color: var(--gold); outline: none; }
 
         /* Tabela e Kontrollit Total */
-        .master-stock { background: #111; padding: 15px; border-radius: 10px; border: 1px solid #444; margin-bottom: 30px; }
-        .master-stock h3 { margin-top: 0; color: var(--gold); font-size: 1rem; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .master-stock { background: white; padding: 15px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .master-stock h3 { margin-top: 0; color: var(--gold); font-size: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
 
         .shop-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-        .column { background: var(--card); border-radius: 10px; padding: 15px; border: 1px solid #333; }
-        .column h2 { text-align: center; color: var(--gold); font-size: 1.1rem; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .column { background: var(--card); border-radius: 10px; padding: 15px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .column h2 { text-align: center; color: var(--gold); font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 10px; text-transform: uppercase; }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.8rem; }
-        th, td { padding: 8px; border-bottom: 1px solid #222; text-align: left; }
-        th { background: #222; color: #777; font-weight: normal; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.8rem; background: white; }
+        th, td { padding: 10px; border-bottom: 1px solid var(--border); text-align: left; }
+        th { background: #f4f4f4; color: #555; font-weight: bold; font-size: 0.75rem; text-transform: uppercase; }
 
-        .sold { opacity: 0.3; text-decoration: line-through; }
-        .badge { padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: bold; }
-        .bg-red { background: rgba(255, 71, 87, 0.2); color: var(--red); }
-        .bg-green { background: rgba(46, 213, 115, 0.2); color: var(--green); }
+        .sold { opacity: 0.4; text-decoration: line-through; background: #feebeb !important; }
+        .badge { padding: 3px 7px; border-radius: 4px; font-size: 0.65rem; font-weight: bold; text-transform: uppercase; }
+        .bg-red { background: rgba(214, 48, 49, 0.1); color: var(--red); border: 1px solid var(--red); }
+        .bg-green { background: rgba(39, 174, 96, 0.1); color: var(--green); border: 1px solid var(--green); }
 
-        .btn { border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .btn-add { background: var(--gold); color: black; }
-        .btn-sell { background: var(--green); color: white; font-size: 0.7rem; }
+        .btn { border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.8rem; transition: 0.2s; }
+        .btn-add { background: var(--gold); color: white; }
+        .btn-add:hover { background: #a38328; }
+        .btn-sell { background: var(--green); color: white; }
+        .btn-sell:hover { background: #219150; }
+        .btn-print { background: white; color: #333; border: 1px solid #ccc; }
+        .btn-print:hover { background: #f4f4f4; }
 
-        @media print { .admin-panel, .btn-sell, .header-top { display: none; } .shop-grid { display: block; } }
+        @media print { .admin-panel, .btn-sell, .header-top { display: none !important; } .shop-grid { display: block; } .column { border: none; box-shadow: none; margin-bottom: 30px; } table { font-size: 9pt; } th { background: #eee !important; color: black !important; } }
+        @media (max-width: 1100px) { .shop-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
-<div class="header-top">
-    <h1>GOLD POINT GROUP - Inventura</h1>
-    <button class="btn" style="background:white" onclick="window.print()">🖨️ TISKNOUT (PRINT)</button>
-</div>
+<div class="container">
+    <div class="header-top">
+        <h1>GOLD POINT GROUP</h1>
+        <button class="btn btn-print" onclick="window.print()">🖨️ TISKNOUT (PRINT)</button>
+    </div>
 
-<div class="stats-container">
-    <div class="stat-card"><h4>CELKEM NA SKLADĚ (STOK TOTAL)</h4><p id="stat-skladem" style="color:var(--green)">0</p></div>
-    <div class="stat-card"><h4>DNES PRODÁNO (SHITUR SOT)</h4><p id="stat-prodano" style="color:var(--red)">0</p></div>
-    <div class="stat-card"><h4>AKTIVNÍ MODELY</h4><p id="stat-modely">0</p></div>
-</div>
+    <div class="stats-container">
+        <div class="stat-card"><h4>CELKEM NA SKLADĚ (STOK TOTAL)</h4><p id="stat-skladem" style="color:var(--green)">0</p></div>
+        <div class="stat-card"><h4>DNES PRODÁNO (SHITUR SOT)</h4><p id="stat-prodano" style="color:var(--red)">0</p></div>
+        <div class="stat-card"><h4>AKTIVNÍ MODELY</h4><p id="stat-modely" style="color:var(--gold)">0</p></div>
+    </div>
 
-<div class="admin-panel">
-    <h3 style="color:var(--gold); margin-top:0;">📦 PŘIDAT NOVÉ ZBOŽÍ (SHTO STOK TË RI)</h3>
-    <div class="form-row">
-        <div class="form-group"><label>Prodejna:</label><select id="res-shop"><option value="GPG">GOLD POINT</option><option value="LBX">MELANTRICHOVA</option><option value="PALL">PALLADIUM</option></select></div>
-        <div class="form-group"><label>Kód:</label><input type="text" id="res-kod" placeholder="F3-5mm"></div>
-        <div class="form-group"><label>Typ:</label><select id="res-typ"><option value="D">Dámský</option><option value="P">Pánský</option></select></div>
-        <div class="form-group"><label>MM:</label><input type="text" id="res-mm" style="width:50px" placeholder="4mm"></div>
-        <div class="form-group"><label>Barva:</label><select id="res-barva"><option value="Žluté">Žluté</option><option value="Bílé">Bílé</option><option value="Rose">Rose</option></select></div>
-        <div class="form-group"><label>Velikost:</label><input type="number" id="res-vel" style="width:60px" placeholder="54"></div>
-        <button class="btn btn-add" onclick="addItem()">+ PŘIDAT</button>
+    <div class="admin-panel">
+        <h3>📦 PŘIDAT NOVÉ ZBOŽÍ (SHTO STOK TË RI)</h3>
+        <div class="form-row">
+            <div class="form-group"><label>Prodejna:</label><select id="res-shop"><option value="GPG">GOLD POINT</option><option value="LBX">MELANTRICHOVA</option><option value="PALL">PALLADIUM</option></select></div>
+            <div class="form-group"><label>Kód:</label><input type="text" id="res-kod" placeholder="F3-5mm"></div>
+            <div class="form-group"><label>Typ:</label><select id="res-typ"><option value="D">Dámský</option><option value="P">Pánský</option></select></div>
+            <div class="form-group"><label>MM:</label><input type="text" id="res-mm" style="width:50px" placeholder="4mm"></div>
+            <div class="form-group"><label>Barva:</label><select id="res-barva"><option value="Žluté">Žluté</option><option value="Bílé">Bílé</option><option value="Rose">Rose</option></select></div>
+            <div class="form-group"><label>Velikost:</label><input type="number" id="res-vel" style="width:60px" placeholder="54"></div>
+            <button class="btn btn-add" onclick="addItem()">+ PŘIDAT DO SYSTÉMU</button>
+        </div>
+    </div>
+
+    <div class="master-stock">
+        <h3>🔍 DETAILNÍ SEZNAM SKLADU (QKA KA SECILI DYQAN)</h3>
+        <table id="master-table">
+            <thead>
+                <tr><th>Prodejna</th><th>Kód</th><th>Typ</th><th>Barva (MM)</th><th>Velikost</th><th>Stav</th></tr>
+            </thead>
+            <tbody id="master-body"></tbody>
+        </table>
+    </div>
+
+    <div class="shop-grid">
+        <div class="column">
+            <h2>GOLD POINT (GPG)</h2>
+            <table id="table-GPG"><thead><tr><th>Kód Modelu</th><th>Barva / Vel</th><th>Akce</th></tr></thead><tbody></tbody></table>
+        </div>
+        <div class="column">
+            <h2>MELANTRICHOVA (LBX)</h2>
+            <table id="table-LBX"><thead><tr><th>Kód Modelu</th><th>Barva / Vel</th><th>Akce</th></tr></thead><tbody></tbody></table>
+        </div>
+        <div class="column">
+            <h2>PALLADIUM (PALL)</h2>
+            <table id="table-PALL"><thead><tr><th>Kód Modelu</th><th>Barva / Vel</th><th>Akce</th></tr></thead><tbody></tbody></table>
+        </div>
     </div>
 </div>
 
-<div class="master-stock">
-    <h3>🔍 DETAILNÍ SEZNAM SKLADU (QKA KA SECILI DYQAN)</h3>
-    <table id="master-table">
-        <thead>
-            <tr><th>Prodejna</th><th>Kód</th><th>Typ</th><th>Barva</th><th>Velikost</th><th>Stav</th></tr>
-        </thead>
-        <tbody id="master-body"></tbody>
-    </table>
-</div>
-
-<div class="shop-grid">
-    <div class="column"><h2>GOLD POINT</h2><table id="table-GPG"><thead><tr><th>Kód</th><th>Barva/Vel</th><th>Akce</th></tr></thead><tbody></tbody></table></div>
-    <div class="column"><h2>MELANTRICHOVA</h2><table id="table-LBX"><thead><tr><th>Kód</th><th>Barva/Vel</th><th>Akce</th></tr></thead><tbody></tbody></table></div>
-    <div class="column"><h2>PALLADIUM</h2><table id="table-PALL"><thead><tr><th>Kód</th><th>Barva/Vel</th><th>Akce</th></tr></thead><tbody></tbody></table></div>
-</div>
-
 <script>
-    let inventory = JSON.parse(localStorage.getItem('gpg_full_stock')) || [];
+    // Inventari ruhet ne LocalStorage
+    let inventory = JSON.parse(localStorage.getItem('gpg_full_stock_light')) || [];
 
     function addItem() {
         const item = {
@@ -102,19 +131,23 @@
             vel: document.getElementById('res-vel').value,
             sold: false
         };
-        if(!item.kod || !item.vel) return alert("Vyplňte údaje!");
+        if(!item.kod || !item.vel) return alert("Prosím vyplňte Kód a Velikost!");
         inventory.push(item);
         save();
         document.getElementById('res-kod').value = '';
+        document.getElementById('res-vel').value = '';
     }
 
     function sellItem(id) {
         const idx = inventory.findIndex(i => i.id === id);
-        if(idx !== -1) { inventory[idx].sold = true; save(); }
+        if(idx !== -1) {
+            inventory[idx].sold = true;
+            save();
+        }
     }
 
     function save() {
-        localStorage.setItem('gpg_full_stock', JSON.stringify(inventory));
+        localStorage.setItem('gpg_full_stock_light', JSON.stringify(inventory));
         render();
     }
 
@@ -128,33 +161,42 @@
         // Master Table (Admin View)
         const masterBody = document.getElementById('master-body');
         masterBody.innerHTML = '';
+        // Shfaq te fundit ne fillim
         inventory.slice().reverse().forEach(i => {
-            masterBody.innerHTML += `
-                <tr class="${i.sold ? 'sold' : ''}">
-                    <td style="color:var(--gold)">${i.shop}</td>
-                    <td><b>${i.kod}</b></td>
-                    <td>${i.typ}</td>
-                    <td>${i.barva} (${i.mm})</td>
-                    <td><b>${i.vel}</b></td>
-                    <td><span class="badge ${i.sold ? 'bg-red' : 'bg-green'}">${i.sold ? 'PRODÁNO' : 'SKLADEM'}</span></td>
-                </tr>`;
+            const tr = document.createElement('tr');
+            if(i.sold) tr.className = 'sold';
+            tr.innerHTML = `
+                <td style="color:var(--gold); font-weight:bold">${i.shop}</td>
+                <td><b>${i.kod}</b></td>
+                <td>${i.typ === 'D' ? 'Dámský' : 'Pánský'}</td>
+                <td>${i.barva} <small>(${i.mm})</small></td>
+                <td><b style="font-size:1rem">${i.vel}</b></td>
+                <td><span class="badge ${i.sold ? 'bg-red' : 'bg-green'}">${i.sold ? 'VYPRODÁNO' : 'SKLADEM'}</span></td>
+            `;
+            masterBody.appendChild(tr);
         });
 
         // Shop Tables
         ['GPG', 'LBX', 'PALL'].forEach(s => {
             const tbody = document.querySelector(`#table-${s} tbody`);
             tbody.innerHTML = '';
+            // Ne dyqan shfaqen vetem ato qe NUK jane shitur
             inventory.filter(i => i.shop === s && !i.sold).forEach(i => {
                 tbody.innerHTML += `
                     <tr>
-                        <td><b>${i.kod}</b><br><small>${i.typ}</small></td>
+                        <td><b>${i.kod}</b><br><small>${i.typ === 'D' ? 'Dámský' : 'Pánský'}</small></td>
                         <td>${i.barva}<br><b>Vel: ${i.vel}</b></td>
                         <td><button class="btn btn-sell" onclick="sellItem(${i.id})">PRODAT</button></td>
                     </tr>`;
             });
         });
     }
+
+    // Per testim - shton disa te dhena random (Mund ta fshish me vone)
+    function clearDatabase() { if(confirm("Opravdu smazat celý sklad?")) { inventory = []; save(); } }
+
     render();
 </script>
+
 </body>
 </html>
