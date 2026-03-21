@@ -3,48 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GPG - Manažer Skladu</title>
+    <title>GPG - Manažer Skladu + Timestamp</title>
     <style>
         :root { --gold: #BF9B30; --bg: #ffffff; --card: #fdfdfd; --text: #111; --border: #eee; --red: #e74c3c; --green: #27ae60; }
         body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; }
-        h1 { color: var(--gold); text-align: center; font-size: 1.4rem; border-bottom: 2px solid var(--gold); padding-bottom: 10px; }
         
-        /* Formular */
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); padding-bottom: 10px; margin-bottom: 15px; }
+        h1 { color: var(--gold); margin: 0; font-size: 1.1rem; text-transform: uppercase; }
+        
         .admin-panel { background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid var(--gold); margin-bottom: 20px; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .full-width { grid-column: span 2; }
-        input, select { padding: 10px; border: 1px solid #ccc; border-radius: 5px; width: 100%; box-sizing: border-box; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        input, select { padding: 8px; border: 1px solid #ccc; border-radius: 5px; width: 100%; box-sizing: border-box; font-size: 0.9rem; }
         
         .btn { border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
         .btn-add { background: var(--gold); color: white; }
-        .btn-sell { background: var(--green); color: white; font-size: 0.7rem; }
-        .btn-undo { background: #3498db; color: white; font-size: 0.7rem; }
-        .btn-del { background: var(--red); color: white; font-size: 0.7rem; }
+        .btn-print { background: #333; color: white; width: auto; padding: 5px 15px; font-size: 0.8rem; }
+        
+        .btn-sell { background: var(--green); color: white; border: none; padding: 6px; border-radius: 3px; cursor: pointer; width: 100%; font-weight: bold; }
+        .btn-undo { background: #3498db; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; }
+        .btn-del { background: var(--red); color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; }
 
-        /* Grida e Dyqaneve */
-        .shop-grid { display: flex; flex-direction: column; gap: 20px; }
-        .column { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .column h2 { color: var(--gold); font-size: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 5px; margin-top: 0; }
+        .shop-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        @media (min-width: 768px) { .shop-grid { grid-template-columns: repeat(3, 1fr); } }
+        
+        .column { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .column h2 { color: var(--gold); font-size: 0.9rem; border-bottom: 1px solid var(--border); padding-bottom: 5px; margin-bottom: 10px; }
 
         table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-        th, td { padding: 8px; border-bottom: 1px solid var(--border); text-align: left; }
-        th { background: #f4f4f4; }
+        th, td { padding: 6px; border-bottom: 1px solid #f0f0f0; text-align: left; }
+        th { background: #f8f8f8; color: #666; font-size: 0.7rem; }
 
-        /* Tabela e te shiturave */
-        .sold-section { margin-top: 40px; border: 2px solid var(--red); padding: 10px; border-radius: 8px; }
-        .sold-section h2 { color: var(--red); font-size: 1.1rem; }
+        .sold-section { margin-top: 40px; border: 1px solid var(--red); padding: 15px; border-radius: 8px; background: #fffafb; }
+        .sold-section h2 { color: var(--red); font-size: 1rem; margin-top: 0; margin-bottom: 10px; }
+        .timestamp { color: #888; font-size: 0.65rem; display: block; margin-top: 2px; }
+
+        @media print {
+            .admin-panel, .shop-grid, .btn-sell, .btn-undo, .btn-del { display: none !important; }
+            .sold-section { border: none; margin-top: 0; padding: 0; }
+            th:last-child, td:last-child { display: none; } /* Heq kolonen e butonave ne print */
+            body { background: white; }
+        }
     </style>
 </head>
 <body>
 
-<h1>GOLD POINT GROUP</h1>
+<div class="header">
+    <h1>GOLD POINT GROUP</h1>
+    <button class="btn btn-print" onclick="window.print()">🖨️ PRINT RAPORTI</button>
+</div>
 
 <div class="admin-panel">
     <div class="form-row">
         <select id="res-shop"><option value="GPG">GOLD POINT</option><option value="LBX">MELANTRICHOVA</option><option value="PALL">PALLADIUM</option></select>
-        <input type="text" id="res-kod" placeholder="Kód Modelu">
+        <input type="text" id="res-kod" placeholder="Kód">
         <select id="res-typ"><option value="D">Dámský</option><option value="P">Pánský</option></select>
-        <input type="text" id="res-mm" placeholder="MM (př. 4mm)">
+        <input type="text" id="res-mm" placeholder="MM">
         <select id="res-barva"><option value="Žluté">Žluté</option><option value="Bílé">Bílé</option><option value="Rose">Rose</option></select>
         <input type="number" id="res-vel" placeholder="Velikost">
     </div>
@@ -52,21 +65,21 @@
 </div>
 
 <div class="shop-grid">
-    <div class="column"><h2>GOLD POINT</h2><table id="table-GPG"><thead><tr><th>Model</th><th>Vel.</th><th>Akce</th></tr></thead><tbody></tbody></table></div>
-    <div class="column"><h2>MELANTRICHOVA</h2><table id="table-LBX"><thead><tr><th>Model</th><th>Vel.</th><th>Akce</th></tr></thead><tbody></tbody></table></div>
-    <div class="column"><h2>PALLADIUM</h2><table id="table-PALL"><thead><tr><th>Model</th><th>Vel.</th><th>Akce</th></tr></thead><tbody></tbody></table></div>
+    <div class="column"><h2>GOLD POINT (GPG)</h2><table id="table-GPG"><thead><tr><th>Model</th><th>Vel.</th><th>Akce</th></tr></thead><tbody></tbody></table></div>
+    <div class="column"><h2>MELANTRICHOVA (LBX)</h2><table id="table-LBX"><thead><tr><th>Model</th><th>Vel.</th><th>Akce</th></tr></thead><tbody></tbody></table></div>
+    <div class="column"><h2>PALLADIUM (PALL)</h2><table id="table-PALL"><thead><tr><th>Model</th><th>Vel.</th><th>Akce</th></tr></thead><tbody></tbody></table></div>
 </div>
 
 <div class="sold-section">
-    <h2>🔴 VÝPIS PRODANÝCH (SHITUR)</h2>
+    <h2>🔴 VÝPIS PRODANÝCH (S DATEM A ČASEM)</h2>
     <table id="table-sold">
-        <thead><tr><th>Pôvod</th><th>Model</th><th>Vel.</th><th>Akce</th></tr></thead>
+        <thead><tr><th>Původ</th><th>Model / Barva</th><th>Vel.</th><th>Čas prodeje</th><th>Akce</th></tr></thead>
         <tbody></tbody>
     </table>
 </div>
 
 <script>
-    let inventory = JSON.parse(localStorage.getItem('gpg_manual_db')) || [];
+    let inventory = JSON.parse(localStorage.getItem('gpg_db_v3_time')) || [];
 
     function addItem() {
         const item = {
@@ -77,30 +90,47 @@
             mm: document.getElementById('res-mm').value,
             barva: document.getElementById('res-barva').value,
             vel: document.getElementById('res-vel').value,
-            sold: false
+            sold: false,
+            soldTime: null
         };
-        if(!item.kod || !item.vel) return alert("Doplňte kód a velikost!");
+        if(!item.kod || !item.vel) return alert("Prosím vyplňte Kód a Velikost!");
         inventory.push(item);
         save();
+        document.getElementById('res-kod').value = '';
+        document.getElementById('res-vel').value = '';
     }
 
-    function changeStatus(id, status) {
+    function sellItem(id) {
         const idx = inventory.findIndex(i => i.id === id);
         if(idx !== -1) {
-            inventory[idx].sold = status;
+            const d = new Date();
+            // Formati: DD.MM.YYYY HH:MM
+            const timeStr = `${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()} | ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}`;
+            
+            inventory[idx].sold = true;
+            inventory[idx].soldTime = timeStr;
+            save();
+        }
+    }
+
+    function undoSell(id) {
+        const idx = inventory.findIndex(i => i.id === id);
+        if(idx !== -1) {
+            inventory[idx].sold = false;
+            inventory[idx].soldTime = null;
             save();
         }
     }
 
     function deleteItem(id) {
-        if(confirm("Smazat trvale?")) {
+        if(confirm("Opravdu smazat?")) {
             inventory = inventory.filter(i => i.id !== id);
             save();
         }
     }
 
     function save() {
-        localStorage.setItem('gpg_manual_db', JSON.stringify(inventory));
+        localStorage.setItem('gpg_db_v3_time', JSON.stringify(inventory));
         render();
     }
 
@@ -110,22 +140,23 @@
             tbody.innerHTML = '';
             inventory.filter(i => i.shop === s && !i.sold).forEach(i => {
                 tbody.innerHTML += `<tr>
-                    <td><b>${i.kod}</b><br>${i.barva} (${i.mm})</td>
-                    <td><b>${i.vel}</b><br>${i.typ}</td>
-                    <td><button class="btn-sell" onclick="changeStatus(${i.id}, true)">PRODAT</button></td>
+                    <td><b>${i.kod}</b><br><small>${i.barva} ${i.mm}</small></td>
+                    <td><b>${i.vel}</b><br><small>${i.typ === 'D' ? 'D' : 'P'}</small></td>
+                    <td><button class="btn-sell" onclick="sellItem(${i.id})">SHIT</button></td>
                 </tr>`;
             });
         });
 
         const soldBody = document.querySelector('#table-sold tbody');
         soldBody.innerHTML = '';
-        inventory.filter(i => i.sold).forEach(i => {
+        inventory.filter(i => i.sold).reverse().forEach(i => {
             soldBody.innerHTML += `<tr>
-                <td>${i.shop}</td>
-                <td><b>${i.kod}</b></td>
+                <td><small>${i.shop}</small></td>
+                <td><b>${i.kod}</b><br><small>${i.barva}</small></td>
                 <td><b>${i.vel}</b></td>
+                <td style="color:#888; font-size:0.7rem">${i.soldTime}</td>
                 <td>
-                    <button class="btn-undo" onclick="changeStatus(${i.id}, false)">ZPĚT</button>
+                    <button class="btn-undo" onclick="undoSell(${i.id})">↺</button>
                     <button class="btn-del" onclick="deleteItem(${i.id})">X</button>
                 </td>
             </tr>`;
