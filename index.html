@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GPG - Manažer Skladu + Timestamp</title>
+    <title>GPG - Manažer Skladu (Cloud)</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --gold: #BF9B30; --bg: #ffffff; --card: #fdfdfd; --text: #111; --border: #eee; --red: #e74c3c; --green: #27ae60; }
         body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; }
@@ -35,12 +36,11 @@
 
         .sold-section { margin-top: 40px; border: 1px solid var(--red); padding: 15px; border-radius: 8px; background: #fffafb; }
         .sold-section h2 { color: var(--red); font-size: 1rem; margin-top: 0; margin-bottom: 10px; }
-        .timestamp { color: #888; font-size: 0.65rem; display: block; margin-top: 2px; }
 
         @media print {
             .admin-panel, .shop-grid, .btn-sell, .btn-undo, .btn-del { display: none !important; }
             .sold-section { border: none; margin-top: 0; padding: 0; }
-            th:last-child, td:last-child { display: none; } /* Heq kolonen e butonave ne print */
+            th:last-child, td:last-child { display: none; }
             body { background: white; }
         }
     </style>
@@ -61,7 +61,7 @@
         <select id="res-barva"><option value="Žluté">Žluté</option><option value="Bílé">Bílé</option><option value="Rose">Rose</option></select>
         <input type="number" id="res-vel" placeholder="Velikost">
     </div>
-    <button class="btn btn-add" onclick="addItem()">+ PŘIDAT DO SKLADU</button>
+    <button class="btn btn-add" id="add-btn" onclick="addItem()">+ PŘIDAT DO SKLADU</button>
 </div>
 
 <div class="shop-grid">
@@ -71,7 +71,7 @@
 </div>
 
 <div class="sold-section">
-    <h2>🔴 VÝPIS PRODANÝCH (S DATEM A ČASEM)</h2>
+    <h2>🔴 VÝPIS PRODANÝCH (LIVE CLOUD)</h2>
     <table id="table-sold">
         <thead><tr><th>Původ</th><th>Model / Barva</th><th>Vel.</th><th>Čas prodeje</th><th>Akce</th></tr></thead>
         <tbody></tbody>
@@ -79,62 +79,73 @@
 </div>
 
 <script>
-    let inventory = JSON.parse(localStorage.getItem('gpg_db_v3_time')) || [];
+    // --- LIDHJA ME SUPABASE (KODET E TUA) ---
+    const S_URL = "https://sudafhyeiyqflupjberp.supabase.co";
+    const S_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1ZGFmaHllaXlxZmx1cGpiZXJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDI3NjEsImV4cCI6MjA4OTY3ODc2MX0.7JmqOiSRiBo8qEHOkIhhhZv6I3zURuJdWNhe4x12LIs";
+    const _supabase = supabase.createClient(S_URL, S_KEY);
 
-    function addItem() {
+    let inventory = [];
+
+    // Ngarkimi i të dhënave nga Cloud
+    async function loadData() {
+        const { data, error } = await _supabase.from('inventory').select('*').order('id', { ascending: false });
+        if (!error) {
+            inventory = data;
+            render();
+        }
+    }
+
+    // Shtimi i unazës së re
+    async function addItem() {
+        const btn = document.getElementById('add-btn');
         const item = {
-            id: Date.now(),
             shop: document.getElementById('res-shop').value,
             kod: document.getElementById('res-kod').value,
             typ: document.getElementById('res-typ').value,
             mm: document.getElementById('res-mm').value,
             barva: document.getElementById('res-barva').value,
-            vel: document.getElementById('res-vel').value,
-            sold: false,
-            soldTime: null
+            vel: parseInt(document.getElementById('res-vel').value),
+            sold: false
         };
+
         if(!item.kod || !item.vel) return alert("Prosím vyplňte Kód a Velikost!");
-        inventory.push(item);
-        save();
-        document.getElementById('res-kod').value = '';
-        document.getElementById('res-vel').value = '';
-    }
 
-    function sellItem(id) {
-        const idx = inventory.findIndex(i => i.id === id);
-        if(idx !== -1) {
-            const d = new Date();
-            // Formati: DD.MM.YYYY HH:MM
-            const timeStr = `${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()} | ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}`;
-            
-            inventory[idx].sold = true;
-            inventory[idx].soldTime = timeStr;
-            save();
+        btn.disabled = true;
+        const { error } = await _supabase.from('inventory').insert([item]);
+        
+        if(!error) {
+            document.getElementById('res-kod').value = '';
+            document.getElementById('res-vel').value = '';
+            await loadData();
         }
+        btn.disabled = false;
     }
 
-    function undoSell(id) {
-        const idx = inventory.findIndex(i => i.id === id);
-        if(idx !== -1) {
-            inventory[idx].sold = false;
-            inventory[idx].soldTime = null;
-            save();
-        }
+    // Shitja e unazës
+    async function sellItem(id) {
+        const d = new Date();
+        const timeStr = `${d.getDate()}.${d.getMonth()+1}. | ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}`;
+        
+        await _supabase.from('inventory').update({ sold: true, sold_time: timeStr }).eq('id', id);
+        await loadData();
     }
 
-    function deleteItem(id) {
+    // Kthimi në stok (Undo)
+    async function undoSell(id) {
+        await _supabase.from('inventory').update({ sold: false, sold_time: null }).eq('id', id);
+        await loadData();
+    }
+
+    // Fshirja përfundimtare
+    async function deleteItem(id) {
         if(confirm("Opravdu smazat?")) {
-            inventory = inventory.filter(i => i.id !== id);
-            save();
+            await _supabase.from('inventory').delete().eq('id', id);
+            await loadData();
         }
-    }
-
-    function save() {
-        localStorage.setItem('gpg_db_v3_time', JSON.stringify(inventory));
-        render();
     }
 
     function render() {
+        // Dyqanet (Stoku)
         ['GPG', 'LBX', 'PALL'].forEach(s => {
             const tbody = document.querySelector(`#table-${s} tbody`);
             tbody.innerHTML = '';
@@ -147,14 +158,15 @@
             });
         });
 
+        // Tabela e të shiturave
         const soldBody = document.querySelector('#table-sold tbody');
         soldBody.innerHTML = '';
-        inventory.filter(i => i.sold).reverse().forEach(i => {
+        inventory.filter(i => i.sold).forEach(i => {
             soldBody.innerHTML += `<tr>
                 <td><small>${i.shop}</small></td>
                 <td><b>${i.kod}</b><br><small>${i.barva}</small></td>
                 <td><b>${i.vel}</b></td>
-                <td style="color:#888; font-size:0.7rem">${i.soldTime}</td>
+                <td style="color:#888; font-size:0.7rem">${i.sold_time || ''}</td>
                 <td>
                     <button class="btn-undo" onclick="undoSell(${i.id})">↺</button>
                     <button class="btn-del" onclick="deleteItem(${i.id})">X</button>
@@ -162,7 +174,10 @@
             </tr>`;
         });
     }
-    render();
+
+    // Refresh automatik çdo 10 sekonda (Real-time)
+    setInterval(loadData, 10000);
+    loadData();
 </script>
 </body>
 </html>
