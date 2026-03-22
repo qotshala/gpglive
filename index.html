@@ -7,17 +7,31 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --gold: #BF9B30; --bg: #ffffff; --text: #111; --border: #eee; --red: #e74c3c; --green: #27ae60; --blue: #3498db; --orange: #f39c12; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; visibility: hidden; }
         
+        /* Login Screen */
+        #login-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: #111; display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; z-index: 9999; visibility: visible;
+        }
+        #login-box { background: white; padding: 30px; border-radius: 15px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 280px; }
+        #login-box h2 { color: var(--gold); margin-bottom: 20px; font-size: 1.2rem; }
+        #pass-input { 
+            width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; 
+            border-radius: 8px; text-align: center; font-size: 1.1rem; box-sizing: border-box;
+            outline: none;
+        }
+        #login-btn { width: 100%; padding: 12px; background: var(--gold); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+        /* Layout & UI */
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--gold); padding-bottom: 10px; margin-bottom: 15px; gap: 5px; }
         h1 { color: var(--gold); margin: 0; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; flex-grow: 1; }
-        
         .admin-panel { background: #fdfdfd; padding: 15px; border-radius: 12px; border: 1px solid #ddd; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; position: sticky; top: 10px; z-index: 100; }
         .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
         input, select { padding: 12px; border: 1px solid #ccc; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 0.95rem; outline: none; background: white; }
-        
         .purity-label { background: #f1f1f1; border: 1px dashed #ccc; padding: 12px; border-radius: 8px; font-weight: bold; color: #666; text-align: center; font-size: 0.85rem; }
-
+        
         .btn { border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; font-size: 0.9rem; }
         .btn-add { background: var(--gold); color: white; text-transform: uppercase; width: 100%; margin-top: 10px; }
         .btn-update { background: var(--orange); color: white; text-transform: uppercase; width: 100%; margin-top: 10px; }
@@ -31,82 +45,111 @@
 
         .shop-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 30px; }
         @media (min-width: 1024px) { .shop-grid { grid-template-columns: repeat(3, 1fr); } }
-        
         .column { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
         .column h2 { color: var(--gold); font-size: 0.85rem; border-bottom: 2px solid #f9f9f9; padding-bottom: 8px; margin-bottom: 12px; text-align: center; }
-
         table { width: 100%; border-collapse: separate; border-spacing: 0 5px; }
-        th { color: #777; font-size: 0.65rem; text-transform: uppercase; padding: 5px; text-align: left; }
         td { padding: 10px 8px; font-size: 0.9rem; border-top: 1px solid #eee; border-bottom: 1px solid #eee; }
-        td:first-child { border-left: 1px solid #eee; border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
-        td:last-child { border-right: 1px solid #eee; border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
-
         .row-yellow { background-color: #fff9e6 !important; }
         .row-white { background-color: #f2f2f2 !important; }
         .row-rose { background-color: #fff0f5 !important; }
         .row-mix { background-image: linear-gradient(to right, #fff9e6, #f2f2f2) !important; }
-
         .model-info b { font-size: 1.05rem; display: block; color: #000; }
-        .model-info small { color: #444; font-size: 0.8rem; font-weight: bold; display: block; margin-bottom: 3px; }
         .badge-14kt { background: #ebebeb; color: #777; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; border: 1px solid #ddd; display: inline-block; }
-
+        
         .sold-section { margin-top: 20px; border-top: 4px solid var(--red); padding-top: 20px; }
         .sold-section h2.main-title { color: var(--red); text-align: center; font-size: 1.2rem; margin-bottom: 20px; }
 
-        @media print {
-            .admin-panel, .btn-edit, .btn-undo, .btn-del, .btn-sell, .header button { display: none !important; }
-            body { padding: 0; }
-            .column { box-shadow: none; border: 1px solid #ccc; }
-        }
-        body.print-sales-only .shop-grid:not(.sold-section .shop-grid), 
-        body.print-sales-only .admin-panel { display: none !important; }
+        @media print { .admin-panel, .btn-edit, .btn-undo, .btn-del, .btn-sell, .header button, #login-overlay { display: none !important; } }
+        body.print-sales-only .shop-grid:not(.sold-section .shop-grid), body.print-sales-only .admin-panel { display: none !important; }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <h1>GOLD POINT GROUP</h1>
-    <button class="btn btn-print-sales" onclick="printSales()">🖨️ SALES</button>
-    <button class="btn btn-print" onclick="window.print()">🖨️ ALL</button>
-</div>
-
-<div class="admin-panel" id="top-form">
-    <div class="form-row">
-        <select id="res-shop">
-            <option value="GPG">GOLD POINT</option>
-            <option value="LBX">MELANTRICHOVA</option>
-            <option value="PALL">PALLADIUM</option>
-        </select>
-        <input type="text" id="res-kod" placeholder="Model Code">
-        <input type="text" id="res-mm" placeholder="MM">
-        <select id="res-barva">
-            <option value="Yellow">Yellow Gold</option>
-            <option value="White">White Gold</option>
-            <option value="Rose">Rose Gold</option>
-            <option value="Yellow & White">Yellow & White</option>
-        </select>
-        <input type="text" id="res-vel" placeholder="Size">
-        <div class="purity-label">585/1000 (14kt)</div>
+<div id="login-overlay">
+    <div id="login-box">
+        <h2>GPG INVENTORY</h2>
+        <input type="password" id="pass-input" placeholder="" autocapitalize="none" autocomplete="off" autocorrect="off">
+        <button id="login-btn" onclick="checkPass()">ENTER</button>
     </div>
-    <button class="btn btn-add" id="main-btn" onclick="handleAction()">+ ADD TO INVENTORY</button>
 </div>
 
-<div class="shop-grid" id="inventory-grid">
-    <div class="column"><h2>STOCK: GOLD POINT (GPG)</h2><table id="table-GPG"><thead><tr><th>Model</th><th>Size</th><th>Action</th></tr></thead><tbody></tbody></table></div>
-    <div class="column"><h2>STOCK: MELANTRICHOVA (LBX)</h2><table id="table-LBX"><thead><tr><th>Model</th><th>Size</th><th>Action</th></tr></thead><tbody></tbody></table></div>
-    <div class="column"><h2>STOCK: PALLADIUM (PALL)</h2><table id="table-PALL"><thead><tr><th>Model</th><th>Size</th><th>Action</th></tr></thead><tbody></tbody></table></div>
-</div>
+<div id="app-content">
+    <div class="header">
+        <h1>GOLD POINT GROUP</h1>
+        <button class="btn btn-print-sales" onclick="printSales()">🖨️ SALES</button>
+        <button class="btn btn-print" onclick="window.print()">🖨️ ALL</button>
+    </div>
 
-<div class="sold-section">
-    <h2 class="main-title">🔴 SOLD ITEMS REPORT</h2>
-    <div class="shop-grid">
-        <div class="column"><h2>SOLD: GOLD POINT GROUP (GPG)</h2><table id="table-sold-GPG"><thead><tr><th>Model</th><th>Size</th><th>Date</th><th>Action</th></tr></thead><tbody></tbody></table></div>
-        <div class="column"><h2>SOLD: MELANTRICHOVA (LBX)</h2><table id="table-sold-LBX"><thead><tr><th>Model</th><th>Size</th><th>Date</th><th>Action</th></tr></thead><tbody></tbody></table></div>
-        <div class="column"><h2>SOLD: PALLADIUM (PALL)</h2><table id="table-sold-PALL"><thead><tr><th>Model</th><th>Size</th><th>Date</th><th>Action</th></tr></thead><tbody></tbody></table></div>
+    <div class="admin-panel" id="top-form">
+        <div class="form-row">
+            <select id="res-shop">
+                <option value="GPG">GOLD POINT</option>
+                <option value="LBX">MELANTRICHOVA</option>
+                <option value="PALL">PALLADIUM</option>
+            </select>
+            <input type="text" id="res-kod" placeholder="Model Code">
+            <input type="text" id="res-mm" placeholder="MM">
+            <select id="res-barva">
+                <option value="Yellow">Yellow Gold</option>
+                <option value="White">White Gold</option>
+                <option value="Rose">Rose Gold</option>
+                <option value="Yellow & White">Yellow & White</option>
+            </select>
+            <input type="text" id="res-vel" placeholder="Size">
+            <div class="purity-label">585/1000 (14kt)</div>
+        </div>
+        <button class="btn btn-add" id="main-btn" onclick="handleAction()">+ ADD TO INVENTORY</button>
+    </div>
+
+    <div class="shop-grid" id="inventory-grid">
+        <div class="column"><h2>STOCK: GOLD POINT (GPG)</h2><table id="table-GPG"><tbody></tbody></table></div>
+        <div class="column"><h2>STOCK: MELANTRICHOVA (LBX)</h2><table id="table-LBX"><tbody></tbody></table></div>
+        <div class="column"><h2>STOCK: PALLADIUM (PALL)</h2><table id="table-PALL"><tbody></tbody></table></div>
+    </div>
+
+    <div class="sold-section">
+        <h2 class="main-title">🔴 SOLD ITEMS REPORT</h2>
+        <div class="shop-grid">
+            <div class="column"><h2>SOLD: GOLD POINT GROUP (GPG)</h2><table id="table-sold-GPG"><tbody></tbody></table></div>
+            <div class="column"><h2>SOLD: MELANTRICHOVA (LBX)</h2><table id="table-sold-LBX"><tbody></tbody></table></div>
+            <div class="column"><h2>SOLD: PALLADIUM (PALL)</h2><table id="table-sold-PALL"><tbody></tbody></table></div>
+        </div>
     </div>
 </div>
 
 <script>
+    const MASTER_PASS = "kasa"; 
+
+    function checkPass() {
+        const input = document.getElementById('pass-input').value.toLowerCase();
+        if(input === MASTER_PASS) {
+            const now = new Date().getTime();
+            localStorage.setItem('gpg_auth', now);
+            unlockPage();
+        } else {
+            alert("Wrong password!");
+        }
+    }
+
+    function unlockPage() {
+        document.getElementById('login-overlay').style.display = 'none';
+        document.body.style.visibility = 'visible';
+    }
+
+    window.onload = function() {
+        const authTime = localStorage.getItem('gpg_auth');
+        const now = new Date().getTime();
+        if(authTime && (now - authTime < 24 * 60 * 60 * 1000)) {
+            unlockPage();
+        } else {
+            document.body.style.visibility = 'visible';
+        }
+    }
+
+    document.getElementById('pass-input').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') checkPass();
+    });
+
     const S_URL = "https://sudafhyeiyqflupjberp.supabase.co";
     const S_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1ZGFmaHllaXlxZmx1cGpiZXJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDI3NjEsImV4cCI6MjA4OTY3ODc2MX0.7JmqOiSRiBo8qEHOkIhhhZv6I3zURuJdWNhe4x12LIs";
     const _supabase = supabase.createClient(S_URL, S_KEY);
@@ -207,14 +250,14 @@
         if(confirm(`ARE YOU SURE?\n\nSELL: ${kod}\nPURITY: 585/1000 (14kt)\nCOLOR: ${translateColor(color)}\nSIZE: ${size}`)) {
             const d = new Date();
             const dataVeq = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
-            await _supabase.from('inventory').update({ sold: true, data_shiftjes: dataVeq }).eq('id', id);
+            await _supabase.from('inventory').update({ sold: true, data_shitjes: dataVeq }).eq('id', id);
             await loadData();
         }
     }
 
     async function undoSell(id) {
         if(confirm("Return this item to stock?")) {
-            await _supabase.from('inventory').update({ sold: false, data_shiftjes: null }).eq('id', id);
+            await _supabase.from('inventory').update({ sold: false, data_shitjes: null }).eq('id', id);
             await loadData();
         }
     }
@@ -234,7 +277,6 @@
 
     function render() {
         const shops = ['GPG', 'LBX', 'PALL'];
-        
         shops.forEach(s => {
             const tbody = document.querySelector(`#table-${s} tbody`);
             tbody.innerHTML = '';
