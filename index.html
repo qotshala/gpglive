@@ -6,69 +6,68 @@
     <title>GPG - Inventory Management</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --gold: #BF9B30; --bg: #ffffff; --card: #fdfdfd; --text: #111; --border: #eee; --red: #e74c3c; --green: #27ae60; --blue: #3498db; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; }
+        :root { --gold: #BF9B30; --bg: #ffffff; --text: #111; --border: #eee; --red: #e74c3c; --green: #27ae60; --blue: #3498db; --orange: #f39c12; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; }
         
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--gold); padding-bottom: 15px; margin-bottom: 20px; }
-        h1 { color: var(--gold); margin: 0; font-size: 1.4rem; text-transform: uppercase; letter-spacing: 1px; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--gold); padding-bottom: 10px; margin-bottom: 15px; }
+        h1 { color: var(--gold); margin: 0; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; }
         
-        .admin-panel { background: #fdfdfd; padding: 20px; border-radius: 12px; border: 1px solid #ddd; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; }
-        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
-        input, select { padding: 12px; border: 1px solid #ccc; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 1rem; outline: none; }
-        input:focus { border-color: var(--gold); }
+        .admin-panel { background: #fdfdfd; padding: 15px; border-radius: 12px; border: 1px solid #ddd; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; position: sticky; top: 10px; z-index: 100; }
+        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+        input, select { padding: 12px; border: 1px solid #ccc; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 1rem; outline: none; background: white; }
+        input:focus { border-color: var(--gold); box-shadow: 0 0 5px rgba(191,155,48,0.2); }
         
-        .btn { border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 15px; transition: 0.3s; font-size: 1rem; }
+        .btn { border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; transition: 0.3s; font-size: 1rem; }
         .btn-add { background: var(--gold); color: white; text-transform: uppercase; }
-        .btn-add:hover { background: #a68628; }
-        .btn-print { background: #333; color: white; width: auto; padding: 8px 20px; margin-top: 0; font-size: 0.9rem; }
+        .btn-update { background: var(--orange); color: white; text-transform: uppercase; }
+        .btn-print { background: #333; color: white; width: auto; padding: 5px 15px; font-size: 0.8rem; margin: 0; }
         
-        .btn-sell { background: var(--green); color: white; padding: 10px; border-radius: 6px; font-size: 0.9rem; }
-        .btn-undo { background: var(--blue); color: white; padding: 6px 12px; border-radius: 5px; margin-right: 5px; }
-        .btn-del { background: var(--red); color: white; padding: 6px 12px; border-radius: 5px; }
+        .btn-sell { background: var(--green); color: white; padding: 12px 8px; border-radius: 6px; font-size: 0.9rem; font-weight: bold; }
+        .btn-edit { background: #f1f1f1; color: #555; padding: 6px 10px; border-radius: 5px; margin-right: 5px; border: 1px solid #ddd; }
+        .btn-undo { background: var(--blue); color: white; padding: 6px 10px; border-radius: 5px; margin-right: 5px; }
+        .btn-del { background: var(--red); color: white; padding: 6px 10px; border-radius: 5px; }
 
-        .shop-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        .shop-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
         @media (min-width: 1024px) { .shop-grid { grid-template-columns: repeat(3, 1fr); } }
         
-        .column { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
-        .column h2 { color: var(--gold); font-size: 1.1rem; border-bottom: 2px solid #f9f9f9; padding-bottom: 10px; margin-bottom: 15px; text-align: center; }
+        .column { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+        .column h2 { color: var(--gold); font-size: 1rem; border-bottom: 2px solid #f9f9f9; padding-bottom: 8px; margin-bottom: 12px; text-align: center; }
 
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #f8f8f8; color: #777; font-size: 0.75rem; text-transform: uppercase; padding: 10px; text-align: left; }
-        td { padding: 12px 10px; border-bottom: 1px solid #f4f4f4; font-size: 0.95rem; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0 5px; }
+        th { color: #777; font-size: 0.7rem; text-transform: uppercase; padding: 8px; text-align: left; }
+        td { padding: 12px 8px; font-size: 1rem; border-top: 1px solid #eee; border-bottom: 1px solid #eee; }
+        td:first-child { border-left: 1px solid #eee; border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        td:last-child { border-right: 1px solid #eee; border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+
+        .row-yellow { background-color: #fff9e6 !important; }
+        .row-white { background-color: #f2f2f2 !important; }
+        .row-rose { background-color: #fff0f5 !important; }
+        .row-mix { background-image: linear-gradient(to right, #fff9e6, #f2f2f2) !important; }
+
+        .model-info b { font-size: 1.1rem; display: block; color: #000; }
+        .model-info small { color: #555; font-size: 0.8rem; font-weight: bold; }
+
+        .sold-section { margin-top: 40px; border: 2px solid var(--red); padding: 15px; border-radius: 12px; background: #fffafb; }
         
-        .model-info b { font-size: 1.05rem; display: block; color: #000; }
-        .model-info small { color: #666; font-size: 0.85rem; }
-
-        .sold-section { margin-top: 50px; border: 2px solid var(--red); padding: 20px; border-radius: 12px; background: #fffafb; }
-        .sold-section h2 { color: var(--red); margin-top: 0; font-size: 1.2rem; }
-
-        @media print {
-            .admin-panel, .shop-grid, .btn-sell, .btn-undo, .btn-del, .btn-print { display: none !important; }
-            .sold-section { border: none; }
-            body { padding: 0; }
-        }
+        @media print { .admin-panel, .btn-sell, .btn-edit, .btn-undo, .btn-del, .btn-print { display: none !important; } }
     </style>
 </head>
 <body>
 
 <div class="header">
     <h1>GOLD POINT GROUP</h1>
-    <button class="btn btn-print" onclick="window.print()">🖨️ PRINT REPORT</button>
+    <button class="btn btn-print" onclick="window.print()">🖨️ PRINT</button>
 </div>
 
-<div class="admin-panel">
+<div class="admin-panel" id="top-form">
     <div class="form-row">
         <select id="res-shop">
             <option value="GPG">GOLD POINT</option>
             <option value="LBX">MELANTRICHOVA</option>
             <option value="PALL">PALLADIUM</option>
         </select>
-        <input type="text" id="res-kod" placeholder="Model Code (e.g. 123)">
-        <select id="res-typ">
-            <option value="D">Female (D)</option>
-            <option value="P">Male (P)</option>
-        </select>
-        <input type="text" id="res-mm" placeholder="Width (MM)">
+        <input type="text" id="res-kod" placeholder="Code">
+        <input type="text" id="res-mm" placeholder="Width MM">
         <select id="res-barva">
             <option value="Yellow">Yellow Gold</option>
             <option value="White">White Gold</option>
@@ -77,7 +76,7 @@
         </select>
         <input type="text" id="res-vel" placeholder="Size">
     </div>
-    <button class="btn btn-add" id="add-btn" onclick="addItem()">+ ADD TO INVENTORY</button>
+    <button class="btn btn-add" id="main-btn" onclick="handleAction()">+ ADD ITEM</button>
 </div>
 
 <div class="shop-grid">
@@ -89,7 +88,7 @@
 <div class="sold-section">
     <h2>🔴 RECENTLY SOLD</h2>
     <table id="table-sold">
-        <thead><tr><th>Store</th><th>Model / Color</th><th>Size</th><th>Sold Date</th><th>Action</th></tr></thead>
+        <thead><tr><th>Store</th><th>Model</th><th>Size</th><th>Date</th><th>Action</th></tr></thead>
         <tbody></tbody>
     </table>
 </div>
@@ -100,43 +99,109 @@
     const _supabase = supabase.createClient(S_URL, S_KEY);
 
     let inventory = [];
+    let editModeId = null;
+    let addCounter = 0; // Sherben per te fshire kodin cdo 2 rreshtime
+
+    function translateColor(color) {
+        if(!color) return "";
+        let c = color.toLowerCase();
+        if(c.includes('žlut') || c === 'yellow') return "Yellow Gold";
+        if(c.includes('bíl') || c === 'white') return "White Gold";
+        if(c.includes('rose')) return "Rose Gold";
+        if(c.includes('&') || c.includes('mix')) return "Yellow & White";
+        return color;
+    }
+
+    function getColorClass(color) {
+        if(!color) return "";
+        let c = color.toLowerCase();
+        if(c.includes('žlut') || c === 'yellow') return "row-yellow";
+        if(c.includes('bíl') || c === 'white') return "row-white";
+        if(c.includes('rose')) return "row-rose";
+        if(c.includes('&') || c.includes('mix')) return "row-mix";
+        return "";
+    }
 
     async function loadData() {
         const { data, error } = await _supabase.from('inventory').select('*').order('id', { ascending: false });
         if (!error) { inventory = data; render(); }
     }
 
+    function handleAction() {
+        if (editModeId) updateItem();
+        else addItem();
+    }
+
     async function addItem() {
-        const btn = document.getElementById('add-btn');
+        const btn = document.getElementById('main-btn');
         const kodVal = document.getElementById('res-kod').value;
         const velVal = document.getElementById('res-vel').value;
-        if(!kodVal || !velVal) return alert("Please enter Code and Size!");
+        if(!kodVal || !velVal) return alert("Enter Code and Size!");
 
         btn.disabled = true;
-        btn.innerText = "Adding...";
-
         const { error } = await _supabase.from('inventory').insert([{
             shop: document.getElementById('res-shop').value,
             kod: kodVal,
-            typ: document.getElementById('res-typ').value,
             mm: document.getElementById('res-mm').value,
             barva: document.getElementById('res-barva').value,
             vel: velVal,
             sold: false
         }]);
 
-        if(error) alert("Error: " + error.message);
-        else { 
-            document.getElementById('res-kod').value = ''; 
-            document.getElementById('res-vel').value = ''; 
-            await loadData(); 
+        if(!error) {
+            addCounter++;
+            // Fshij kodin vetem heren e dyte (pas ciftit)
+            if(addCounter >= 2) {
+                document.getElementById('res-kod').value = '';
+                addCounter = 0;
+            }
+            document.getElementById('res-vel').value = '';
+            await loadData();
         }
         btn.disabled = false;
-        btn.innerText = "+ ADD TO INVENTORY";
+    }
+
+    function startEdit(id) {
+        const item = inventory.find(i => i.id === id);
+        if(!item) return;
+
+        editModeId = id;
+        document.getElementById('res-shop').value = item.shop;
+        document.getElementById('res-kod').value = item.kod;
+        document.getElementById('res-mm').value = item.mm || '';
+        document.getElementById('res-barva').value = item.barva;
+        document.getElementById('res-vel').value = item.vel;
+
+        const btn = document.getElementById('main-btn');
+        btn.innerText = "💾 SAVE CHANGES";
+        btn.className = "btn btn-update";
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function updateItem() {
+        const btn = document.getElementById('main-btn');
+        const { error } = await _supabase.from('inventory').update({
+            shop: document.getElementById('res-shop').value,
+            kod: document.getElementById('res-kod').value,
+            mm: document.getElementById('res-mm').value,
+            barva: document.getElementById('res-barva').value,
+            vel: document.getElementById('res-vel').value
+        }).eq('id', editModeId);
+
+        if(!error) {
+            editModeId = null;
+            btn.innerText = "+ ADD ITEM";
+            btn.className = "btn btn-add";
+            document.getElementById('res-kod').value = '';
+            document.getElementById('res-vel').value = '';
+            addCounter = 0;
+            await loadData();
+        }
     }
 
     async function sellItem(id, kod, color, size) {
-        if(confirm(`Are you sure you want to SELL this item?\n\nModel: ${kod}\nColor: ${color}\nSize: ${size}`)) {
+        let displayColor = translateColor(color);
+        if(confirm(`SELL: ${kod} | ${displayColor} | Size: ${size}?`)) {
             const d = new Date();
             const dataVeq = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
             await _supabase.from('inventory').update({ sold: true, data_shitjes: dataVeq }).eq('id', id);
@@ -144,15 +209,15 @@
         }
     }
 
-    async function undoSell(id, kod) {
-        if(confirm(`Move model ${kod} back to stock?`)) {
+    async function undoSell(id) {
+        if(confirm("Return this item to stock?")) {
             await _supabase.from('inventory').update({ sold: false, data_shitjes: null }).eq('id', id);
             await loadData();
         }
     }
 
     async function deleteItem(id) {
-        if(confirm("Permanently delete this item? This cannot be undone!")) {
+        if(confirm("Delete permanently?")) {
             await _supabase.from('inventory').delete().eq('id', id);
             await loadData();
         }
@@ -163,10 +228,15 @@
             const tbody = document.querySelector(`#table-${s} tbody`);
             tbody.innerHTML = '';
             inventory.filter(i => i.shop === s && !i.sold).forEach(i => {
-                tbody.innerHTML += `<tr>
-                    <td class="model-info"><b>${i.kod}</b><small>${i.barva} ${i.mm}</small></td>
-                    <td><b>${i.vel}</b><br><small>${i.typ}</small></td>
-                    <td><button class="btn-sell" onclick="sellItem(${i.id}, '${i.kod}', '${i.barva}', '${i.vel}')">SELL</button></td>
+                const colorClass = getColorClass(i.barva);
+                const colorName = translateColor(i.barva);
+                tbody.innerHTML += `<tr class="${colorClass}">
+                    <td class="model-info"><b>${i.kod}</b><small>${colorName} ${i.mm}</small></td>
+                    <td><b>${i.vel}</b></td>
+                    <td>
+                        <button class="btn-edit" onclick="startEdit(${i.id})">✎</button>
+                        <button class="btn-sell" onclick="sellItem(${i.id}, '${i.kod}', '${i.barva}', '${i.vel}')">SELL</button>
+                    </td>
                 </tr>`;
             });
         });
@@ -174,20 +244,22 @@
         const soldBody = document.querySelector('#table-sold tbody');
         soldBody.innerHTML = '';
         inventory.filter(i => i.sold).forEach(i => {
+            const colorName = translateColor(i.barva);
             soldBody.innerHTML += `<tr>
                 <td><small>${i.shop}</small></td>
-                <td class="model-info"><b>${i.kod}</b><small>${i.barva}</small></td>
+                <td class="model-info"><b>${i.kod}</b><small>${colorName}</small></td>
                 <td><b>${i.vel}</b></td>
-                <td style="color:#888; font-size:0.8rem">${i.data_shitjes || ''}</td>
+                <td><small>${i.data_shitjes || ''}</small></td>
                 <td>
-                    <button class="btn-undo" onclick="undoSell(${i.id}, '${i.kod}')">↺</button>
+                    <button class="btn-edit" onclick="startEdit(${i.id})">✎</button>
+                    <button class="btn-undo" onclick="undoSell(${i.id})">↺</button>
                     <button class="btn-del" onclick="deleteItem(${i.id})">X</button>
                 </td>
             </tr>`;
         });
     }
 
-    setInterval(loadData, 8000);
+    setInterval(loadData, 10000);
     loadData();
 </script>
 </body>
