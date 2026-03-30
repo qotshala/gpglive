@@ -3,181 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPG Premium Inventory</title>
+    <title>GPG Inventory Control</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --gold: #D4AF37;
-            --gold-light: #F9E4B7;
-            /* Background më i çelët tani */
-            --bg-main: #f8f9fa;
-            --card-bg: #ffffff;
-            /* Teksti kryesor i zi tani */
-            --text-main: #1a1a1a;
-            --text-secondary: #666;
-            --red: #ff5e5e;
-            --green: #2ecc71;
+            --gold: #BF9B30;
+            --bg: #f4f7f6;
+            --card: #ffffff;
+            --text: #2c3e50;
+            --red: #e74c3c;
+            --green: #27ae60;
             --blue: #3498db;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            background: var(--bg-main); color: var(--text-main); margin: 0; padding: 0; padding-bottom: 50px;
+            font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); 
+            margin: 0; padding: 10px; font-size: 14px; padding-bottom: 50px;
         }
 
-        /* Login Overlay (i errët për kontrast sigurie) */
-        #login-overlay { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: #121212; display: flex; flex-direction: column; 
-            justify-content: center; align-items: center; z-index: 10000; 
-        }
-        .login-card {
-            background: #1e1e1e; padding: 40px 30px; border-radius: 25px;
-            border: 1px solid var(--gold); text-align: center; width: 90%; max-width: 350px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        .login-card h2 { color: var(--gold); margin-bottom: 20px; letter-spacing: 2px; }
-        #pass-input { 
-            width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #333;
-            background: #000; color: white; text-align: center; font-size: 1.2rem; margin-bottom: 20px;
+        /* Login */
+        #login-overlay { position: fixed; inset: 0; background: #111; display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        .login-box { background: white; padding: 30px; border-radius: 20px; text-align: center; width: 85%; max-width: 350px; }
+        #pass-input { width: 100%; padding: 15px; margin: 15px 0; border: 1px solid #ddd; border-radius: 10px; text-align: center; font-size: 1.2rem; outline: none; }
+        #login-btn { width: 100%; padding: 15px; background: var(--gold); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1.1rem; }
+
+        header { display: flex; justify-content: center; align-items: center; padding: 15px 5px; border-bottom: 2px solid var(--gold); margin-bottom: 15px; background: white; border-radius: 0 0 15px 15px; }
+        header h1 { font-size: 1.1rem; color: var(--gold); margin: 0; letter-spacing: 1px; }
+
+        /* Form */
+        .admin-panel { background: var(--card); padding: 15px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #ddd; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        input, select { padding: 11px; border-radius: 8px; border: 1px solid #ccc; width: 100%; font-size: 0.9rem; outline: none; }
+        input:focus { border-color: var(--gold); }
+        .btn-add { background: var(--gold); color: white; border: none; width: 100%; padding: 13px; border-radius: 10px; font-weight: bold; margin-top: 10px; font-size: 0.95rem; cursor: pointer; transition: 0.2s; }
+        .btn-update { background: var(--blue); color: white; }
+
+        /* Layout 3 Kolona */
+        .main-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); /* 3 Kolona fiks */
+            gap: 10px; 
+            align-items: start;
         }
 
-        /* Main Header */
-        header {
-            background: var(--card-bg);
-            padding: 15px 20px; border-bottom: 2px solid var(--gold);
-            display: flex; justify-content: space-between; align-items: center;
-            position: sticky; top: 0; z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        header h1 { color: var(--gold); margin: 0; font-size: 1.1rem; font-weight: 800; letter-spacing: 1px; }
-
-        /* Form Styling (i çelët) */
-        .admin-panel { 
-            padding: 15px; background: var(--card-bg); margin: 10px; border-radius: 15px; 
-            border: 1px solid #eee; box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-        }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .full-width { grid-column: span 2; }
-        
-        input, select { 
-            background: #fdfdfd; border: 1px solid #e0e0e0; color: var(--text-main);
-            padding: 12px; border-radius: 10px; font-size: 1rem; width: 100%;
-            outline: none; transition: 0.2s;
-        }
-        input:focus, select:focus { border-color: var(--gold); }
-
-        .btn { 
-            border: none; border-radius: 12px; padding: 12px; font-weight: bold;
-            cursor: pointer; transition: 0.2s; font-size: 0.9rem;
-        }
-        .btn-main { background: var(--gold); color: black; margin-top: 10px; width: 100%; }
-        .btn-update { background: var(--blue); color: white; margin-top: 10px; width: 100%; }
-
-        /* Inventory Cards (të bardha) */
-        .shop-title { color: var(--gold); padding: 10px 20px; font-size: 1.1rem; border-left: 4px solid var(--gold); margin: 25px 0 12px 10px; font-weight: 700; }
-        .sold-title { color: var(--red); padding: 10px 20px; font-size: 1rem; border-left: 4px solid var(--red); margin: 25px 0 12px 10px; font-weight: 700; }
-        
-        .card-container { display: grid; grid-template-columns: 1fr; gap: 12px; padding: 10px; }
-        @media (min-width: 768px) { .card-container { grid-template-columns: repeat(3, 1fr); } }
-
-        .item-card {
-            background: var(--card-bg); border-radius: 18px; padding: 15px;
-            display: flex; justify-content: space-between; align-items: center;
-            border-left: 6px solid #e0e0e0; box-shadow: 0 3px 10px rgba(0,0,0,0.02);
-            border: 1px solid #f1f1f1;
-        }
-        /* Ngjyrat e materialit te karta */
-        .item-card.yellow { border-left-color: #f1c40f; }
-        .item-card.white { border-left-color: #ecf0f1; border: 1px solid #ddd; }
-        .item-card.rose { border-left-color: #e67e22; }
-        .item-card.mix { border-left-color: #f39c12; }
-
-        .item-info { flex: 1; }
-        .item-info b { font-size: 1.2rem; display: block; margin-bottom: 2px; color: #000; }
-        .item-info span { font-size: 0.8rem; color: var(--text-secondary); display: block; margin-bottom: 3px; }
-        .item-info small { font-size: 0.8rem; color: #888; }
-        
-        .right-info { text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
-        .size-tag { 
-            background: #f0f0f0; padding: 5px 12px; border-radius: 8px; font-weight: 800; 
-            color: #333; font-size: 0.9rem; margin-bottom: 10px; border: 1px solid #e0e0e0;
+        @media (max-width: 768px) {
+            .main-grid { gap: 5px; } /* Pak më ngushtë në telefon */
         }
 
-        .actions { display: flex; gap: 8px; }
-        .btn-sm { padding: 8px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; border: none; cursor: pointer; }
+        /* Column Styling */
+        .column { background: transparent; min-height: 100px; }
+        .column h2 { 
+            font-size: 0.7rem; text-align: center; color: white; background: var(--gold); 
+            padding: 8px 2px; border-radius: 8px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .column.sold-col h2 { background: var(--red); }
+
+        /* Card Styling */
+        .item-card { 
+            background: var(--card); border-radius: 10px; padding: 10px; margin-bottom: 10px; 
+            border: 1px solid #eee; box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            position: relative; overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+        /* Shiriti i ngjyrës në krah */
+        .item-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+        .yellow::before { background: #f1c40f; }
+        .white::before { background: #bdc3c7; border: 1px solid #aaa; }
+        .rose::before { background: #e67e22; }
+        .mix::before { background: linear-gradient(to bottom, #f1c40f, #bdc3c7); }
+
+        .item-card b { display: block; font-size: 0.95rem; margin-bottom: 2px; color: #000; }
+        .item-card small { font-size: 0.75rem; color: #7f8c8d; display: block; line-height: 1.2; }
+        .size-tag { font-weight: bold; color: var(--gold); font-size: 0.9rem; margin: 6px 0; background: #fdf9ea; padding: 2px 6px; border-radius: 4px; align-self: flex-start; }
+
+        .actions { display: flex; gap: 4px; margin-top: 5px; }
+        .btn-act { border: none; padding: 7px 4px; border-radius: 6px; font-size: 0.65rem; font-weight: bold; cursor: pointer; flex: 1; transition: 0.1s; }
         .btn-sell { background: var(--green); color: white; }
-        .btn-edit { background: #f1f1f1; color: #555; border: 1px solid #ddd; }
-        .btn-undo { background: var(--blue); color: white; padding: 6px 10px; }
-        .btn-del { background: var(--red); color: white; padding: 6px 10px; }
+        .btn-edit { background: #f5f5f5; color: #333; border: 1px solid #ddd; }
+        .btn-undo { background: var(--blue); color: white; }
+        .btn-del { background: var(--red); color: white; }
 
-        .sold-badge { font-size: 0.7rem; background: #feebeb; padding: 4px 8px; border-radius: 5px; color: var(--red); display: block; margin-top: 5px; font-weight: 700; border: 1px solid #f9dcdc; }
+        .sold-date { font-size: 0.65rem; color: var(--red); font-weight: bold; display: block; margin-top: 5px; text-align: center; border-top: 1px solid #feebeb; padding-top: 4px; }
 
-        @media print { .admin-panel, .actions, header, #login-overlay, .shop-title, .sold-title { display: none; } }
+        /* Rregullime për ekrane të vogla fare */
+        @media (max-width: 600px) {
+            .item-card { padding: 8px 5px; }
+            .item-card b { font-size: 0.85rem; }
+            .size-tag { font-size: 0.8rem; }
+            .btn-act { font-size: 0.6rem; padding: 6px 2px; }
+        }
+
+        @media print { .admin-panel, .actions, header, #login-overlay { display: none; } }
     </style>
 </head>
 <body>
 
 <div id="login-overlay">
-    <div class="login-card">
-        <h2>GPG SECURE</h2>
+    <div class="login-box">
+        <h2>GPG CONTROL</h2>
         <input type="password" id="pass-input" placeholder="Password" autocapitalize="none">
-        <button class="btn-sm btn-main" style="width: 100%; padding:15px; border-radius:12px; font-size:1.2rem;" onclick="checkPass()">LOGIN</button>
+        <button id="login-btn" onclick="checkPass()">ENTER SYSTEM</button>
     </div>
 </div>
 
 <header>
-    <h1>GOLD POINT GROUP</h1>
-    <button class="btn-sm" style="background:#f1f1f1; color:var(--gold); border:1px solid #e0e0e0; font-size:1rem; padding: 8px 12px;" onclick="requestNotificationPermission()">🔔</button>
+    <h1>GOLD POINT GROUP (GPG)</h1>
 </header>
 
 <div class="admin-panel" id="top-form">
-    <div class="form-grid">
-        <select id="res-shop" class="full-width">
-            <option value="GPG">GOLD POINT (Main)</option>
-            <option value="LBX">MELANTRICHOVA</option>
-            <option value="PALL">PALLADIUM</option>
+    <div class="form-row">
+        <select id="res-shop" style="grid-column: span 2;">
+            <option value="GPG">GOLD POINT (GPG)</option>
+            <option value="LBX">MELANTRICHOVA (LBX)</option>
+            <option value="PALL">PALLADIUM (PALL)</option>
         </select>
-        <input type="text" id="res-kod" placeholder="Model Code">
-        <input type="text" id="res-mm" placeholder="MM Width">
+        <input type="text" id="res-kod" placeholder="Code">
+        <input type="text" id="res-mm" placeholder="MM">
         <select id="res-barva">
-            <option value="Yellow">Yellow Gold</option>
-            <option value="White">White Gold</option>
-            <option value="Rose">Rose Gold</option>
+            <option value="Yellow">Yellow</option>
+            <option value="White">White</option>
+            <option value="Rose">Rose</option>
             <option value="Mix">Yellow & White</option>
         </select>
         <input type="text" id="res-vel" placeholder="Size">
     </div>
-    <button class="btn btn-main" id="main-btn" onclick="handleAction()">+ ADD TO INVENTORY</button>
+    <button class="btn-add" id="main-btn" onclick="handleAction()">+ ADD ITEM</button>
 </div>
 
-<div id="shop-sections">
-    <div class="shop-title">STOCK: GOLD POINT (GPG)</div>
-    <div id="stock-GPG" class="card-container"></div>
-    
-    <div class="shop-title">STOCK: MELANTRICHOVA (LBX)</div>
-    <div id="stock-LBX" class="card-container"></div>
-    
-    <div class="shop-title">STOCK: PALLADIUM (PALL)</div>
-    <div id="stock-PALL" class="card-container"></div>
+<div class="main-grid">
+    <div class="column"><h2>GPG STOCK</h2><div id="stock-GPG"></div></div>
+    <div class="column"><h2>LBX STOCK</h2><div id="stock-LBX"></div></div>
+    <div class="column"><h2>PALL STOCK</h2><div id="stock-PALL"></div></div>
 </div>
 
-<div class="sold-section" style="margin-top: 50px; background: #fff; padding: 20px 0; border-top: 4px solid var(--red);">
-    <h1 style="text-align:center; color:var(--red); font-size: 1.5rem; letter-spacing: 2px;">🔴 SOLD HISTORY</h1>
-    
-    <div class="sold-title">🔴 SOLD: PALLADIUM (PALL)</div>
-    <div id="sold-PALL" class="card-container"></div>
-    
-    <div class="sold-title">🔴 SOLD: GOLD POINT (GPG)</div>
-    <div id="sold-GPG" class="card-container"></div>
-    
-    <div class="sold-title">🔴 SOLD: MELANTRICHOVA (LBX)</div>
-    <div id="sold-LBX" class="card-container"></div>
+<div style="margin: 40px 0 20px; text-align: center;">
+    <h3 style="color: var(--red); font-size: 1rem; border-top: 2px dashed #ccc; padding-top: 20px; letter-spacing: 2px;">🔴 SOLD HISTORY</h3>
+</div>
+
+<div class="main-grid">
+    <div class="column sold-col"><h2>GPG SOLD</h2><div id="sold-GPG"></div></div>
+    <div class="column sold-col"><h2>LBX SOLD</h2><div id="sold-LBX"></div></div>
+    <div class="column sold-col"><h2>PALL SOLD</h2><div id="sold-PALL"></div></div>
 </div>
 
 <script>
-    const MASTER_PASS = "kasa";
     const S_URL = "https://sudafhyeiyqflupjberp.supabase.co";
     const S_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1ZGFmaHllaXlxZmx1cGpiZXJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDI3NjEsImV4cCI6MjA4OTY3ODc2MX0.7JmqOiSRiBo8qEHOkIhhhZv6I3zURuJdWNhe4x12LIs";
     const _supabase = supabase.createClient(S_URL, S_KEY);
@@ -185,36 +154,41 @@
     let inventory = [];
     let editModeId = null;
 
-    // Push Notify Setup
-    const PUSH_USER = "qoti";
-    const PUSH_CODE = "539077";
+    // --- NTFY.SH SETUP (FALAS) ---
+    const NTFY_TOPIC = "qotshala"; // Kanali yt nga fotoja
 
-    async function sendPush(title, msg) {
-        const url = `https://pushnotify.co.uk/send/?userid=${PUSH_USER}&code=${PUSH_CODE}&txt=${encodeURIComponent(title + ": " + msg)}`;
-        try { fetch(url, { mode: 'no-cors' }); } catch(e) {}
+    async function sendNtfy(msg) {
+        try {
+            // Dërgon njoftimin falas në iPhone
+            await fetch(`https://ntfy.sh/${NTFY_TOPIC}`, {
+                method: 'POST',
+                body: msg,
+                headers: {
+                    'Title': 'GPG - SHITJE E RE 🔴',
+                    'Tags': 'money,red_circle' // Ikona për njoftimin
+                }
+            });
+            console.log("ntfy: OK");
+        } catch (err) {
+            console.error("ntfy: Error", err);
+        }
     }
 
-    // Helper functions for names
-    function getShopFullName(shop) {
-        if(shop === 'GPG') return "GOLD POINT";
-        if(shop === 'LBX') return "MELANTRICHOVA";
-        if(shop === 'PALL') return "PALLADIUM";
-        return shop;
-    }
-
-    // Auth
+    // --- AUTH ---
     function checkPass() {
-        if(document.getElementById('pass-input').value.toLowerCase() === MASTER_PASS) {
-            localStorage.setItem('gpg_auth_pro_light', 'true');
+        if(document.getElementById('pass-input').value.toLowerCase() === "kasa") {
+            localStorage.setItem('gpg_auth_vfinal_light_ntfy', 'true');
             document.getElementById('login-overlay').style.display='none';
-        } else { alert("Access Denied"); }
+        } else { alert("Correct!"); }
     }
-    if(localStorage.getItem('gpg_auth_pro_light')) document.getElementById('login-overlay').style.display='none';
+    if(localStorage.getItem('gpg_auth_vfinal_light_ntfy')) document.getElementById('login-overlay').style.display='none';
 
-    // Realtime
+    // --- REALTIME UPDATES & NTFY ---
     _supabase.channel('db').on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, payload => {
+        // Kur 'sold' ndryshon nga false në true
         if (payload.eventType === 'UPDATE' && payload.new.sold && !payload.old.sold) {
-            sendPush("🔴 SHITJE E RE", `${payload.new.kod} (${payload.new.shop})`);
+            const tekst = `${payload.new.kod} (${payload.new.shop})`;
+            sendNtfy(tekst); // Aktivizon njoftimin
         }
         loadData();
     }).subscribe();
@@ -228,17 +202,25 @@
     function handleAction() { if(editModeId) updateItem(); else addItem(); }
 
     async function addItem() {
-        const kodVal = document.getElementById('res-kod').value;
-        const velVal = document.getElementById('res-vel').value;
-        if(!kodVal || !velVal) return alert("Enter Code and Size!");
+        const kod = document.getElementById('res-kod').value;
+        const vel = document.getElementById('res-vel').value;
+        if(!kod || !vel) return alert("Code & Size required!");
         await _supabase.from('inventory').insert([{
             shop: document.getElementById('res-shop').value,
-            kod: kodVal, mm: document.getElementById('res-mm').value,
+            kod: kod, mm: document.getElementById('res-mm').value,
             barva: document.getElementById('res-barva').value,
-            vel: velVal, sold: false
+            vel: vel, sold: false
         }]);
-        resetForm();
-        loadData();
+        resetForm(); loadData();
+    }
+
+    async function updateItem() {
+        await _supabase.from('inventory').update({
+            shop: document.getElementById('res-shop').value, kod: document.getElementById('res-kod').value,
+            mm: document.getElementById('res-mm').value, barva: document.getElementById('res-barva').value,
+            vel: document.getElementById('res-vel').value
+        }).eq('id', editModeId);
+        editModeId = null; resetForm(); loadData();
     }
 
     function startEdit(id) {
@@ -250,26 +232,13 @@
         document.getElementById('res-barva').value = i.barva;
         document.getElementById('res-vel').value = i.vel;
         const btn = document.getElementById('main-btn');
-        btn.innerText = "💾 SAVE CHANGES";
-        btn.className = "btn btn-update";
+        btn.innerText = "SAVE CHANGES";
+        btn.className = "btn-add btn-update";
         window.scrollTo(0,0);
     }
 
-    async function updateItem() {
-        await _supabase.from('inventory').update({
-            shop: document.getElementById('res-shop').value,
-            kod: document.getElementById('res-kod').value,
-            mm: document.getElementById('res-mm').value,
-            barva: document.getElementById('res-barva').value,
-            vel: document.getElementById('res-vel').value
-        }).eq('id', editModeId);
-        editModeId = null;
-        resetForm();
-        loadData();
-    }
-
     async function sellItem(id) {
-        if(confirm("Mark as SOLD?")) {
+        if(confirm("Confirm Sale?")) {
             const d = new Date();
             const dateStr = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
             await _supabase.from('inventory').update({ sold: true, data_shitjes: dateStr }).eq('id', id);
@@ -283,62 +252,43 @@
     }
 
     async function deleteItem(id) {
-        if(confirm("Delete permanently?")) {
-            await _supabase.from('inventory').delete().eq('id', id);
-        }
+        if(confirm("Delete permanently?")) await _supabase.from('inventory').delete().eq('id', id);
     }
 
     function resetForm() {
-        document.getElementById('res-kod').value = '';
+        document.getElementById('res-kod').value = ''; 
         document.getElementById('res-mm').value = '';
-        document.getElementById('res-vel').value = '';
-        document.getElementById('main-btn').innerText = "+ ADD TO INVENTORY";
-        document.getElementById('main-btn').className = "btn btn-main";
+        document.getElementById('res-vel').value = ''; 
+        const btn = document.getElementById('main-btn');
+        btn.innerText = "+ ADD ITEM";
+        btn.className = "btn-add";
     }
 
     function render() {
-        const shops = ['GPG', 'LBX', 'PALL'];
-        // Pastro të gjitha grupet
-        shops.forEach(s => {
-            document.getElementById(`stock-${s}`).innerHTML = '';
-            document.getElementById(`sold-${s}`).innerHTML = '';
-        });
+        const targets = ['stock-GPG', 'stock-LBX', 'stock-PALL', 'sold-GPG', 'sold-LBX', 'sold-PALL'];
+        targets.forEach(id => document.getElementById(id).innerHTML = '');
 
         inventory.forEach(i => {
-            const colorClass = i.barva.toLowerCase();
-            const card = `
-                <div class="item-card ${colorClass}">
-                    <div class="item-info">
-                        <span>${i.shop} | ${i.barva} Gold</span>
-                        <b>${i.kod}</b>
-                        <small>${i.mm || ''} mm</small>
-                        ${i.sold ? `<span class="sold-badge">SOLD: ${i.data_shitjes}</span>` : ''}
-                    </div>
-                    <div class="right-info">
-                        <div class="size-tag">${i.vel}</div>
-                        <div class="actions">
-                            ${!i.sold ? `
-                                <button class="btn-sm btn-edit" onclick="startEdit(${i.id})">✎</button>
-                                <button class="btn-sm btn-sell" onclick="sellItem(${i.id})">SELL</button>
-                            ` : `
-                                <button class="btn-sm btn-edit" onclick="startEdit(${i.id})">✎</button>
-                                <button class="btn-sm btn-undo" onclick="undoSell(${i.id})">↺</button>
-                                <button class="btn-sm btn-del" onclick="deleteItem(${i.id})">X</button>
-                            `}
-                        </div>
+            const containerId = (i.sold ? 'sold-' : 'stock-') + i.shop;
+            const target = document.getElementById(containerId);
+            if(!target) return;
+
+            target.innerHTML += `
+                <div class="item-card ${i.barva.toLowerCase()}">
+                    <b>${i.kod}</b>
+                    <small>${i.barva} Gold ${i.mm ? i.mm+'mm' : ''}</small>
+                    <div class="size-tag">${i.vel}</div>
+                    ${i.sold ? `<span class="sold-date">${i.data_shitjes}</span>` : ''}
+                    <div class="actions">
+                        <button class="btn-act btn-edit" onclick="startEdit(${i.id})">✎</button>
+                        ${!i.sold ? 
+                            `<button class="btn-act btn-sell" onclick="sellItem(${i.id})">SELL</button>` : 
+                            `<button class="btn-act btn-undo" onclick="undoSell(${i.id})">↺</button>
+                             <button class="btn-act btn-del" onclick="deleteItem(${i.id})">X</button>`
+                        }
                     </div>
                 </div>
             `;
-
-            if(i.sold) {
-                // Shto te grupi i duhur i shitjeve (Hapi 1 i kërkesës tënde)
-                const soldGroup = document.getElementById(`sold-${i.shop}`);
-                if(soldGroup) soldGroup.innerHTML += card;
-            } else {
-                // Shto te grupi i duhur i stokut
-                const stockGroup = document.getElementById(`stock-${i.shop}`);
-                if(stockGroup) stockGroup.innerHTML += card;
-            }
         });
     }
 
