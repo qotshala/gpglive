@@ -3,64 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GPG - Inventory Management</title>
+    <title>GPG - Inventory</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --gold: #BF9B30; --bg: #ffffff; --text: #111; --border: #eee; --red: #e74c3c; --green: #27ae60; --blue: #3498db; --orange: #f39c12; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; visibility: hidden; }
-        
-        /* Login Screen */
-        #login-overlay { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: #111; display: flex; flex-direction: column; 
-            justify-content: center; align-items: center; z-index: 9999; visibility: visible;
-        }
-        #login-box { background: white; padding: 30px; border-radius: 15px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 280px; }
-        #login-box h2 { color: var(--gold); margin-bottom: 20px; font-size: 1.2rem; }
-        #pass-input { 
-            width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; 
-            border-radius: 8px; text-align: center; font-size: 1.1rem; box-sizing: border-box;
-            outline: none;
-        }
-        #login-btn { width: 100%; padding: 12px; background: var(--gold); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-
-        /* Layout & UI */
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--gold); padding-bottom: 10px; margin-bottom: 15px; gap: 5px; }
-        h1 { color: var(--gold); margin: 0; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; flex-grow: 1; }
-        .admin-panel { background: #fdfdfd; padding: 15px; border-radius: 12px; border: 1px solid #ddd; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; position: sticky; top: 10px; z-index: 100; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; visibility: hidden; }
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #111; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; visibility: visible; }
+        #login-box { background: white; padding: 30px; border-radius: 15px; text-align: center; width: 280px; }
+        #pass-input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; text-align: center; font-size: 1.1rem; }
+        #login-btn { width: 100%; padding: 12px; background: var(--gold); color: white; border: none; border-radius: 8px; font-weight: bold; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--gold); padding-bottom: 10px; margin-bottom: 15px; }
+        h1 { color: var(--gold); margin: 0; font-size: 0.9rem; text-transform: uppercase; }
+        .admin-panel { background: #fdfdfd; padding: 15px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 20px; }
         .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
-        input, select { padding: 12px; border: 1px solid #ccc; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 0.95rem; outline: none; background: white; }
-        .purity-label { background: #f1f1f1; border: 1px dashed #ccc; padding: 12px; border-radius: 8px; font-weight: bold; color: #666; text-align: center; font-size: 0.85rem; }
-        
-        .btn { border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; font-size: 0.9rem; }
-        .btn-add { background: var(--gold); color: white; text-transform: uppercase; width: 100%; margin-top: 10px; }
-        .btn-update { background: var(--orange); color: white; text-transform: uppercase; width: 100%; margin-top: 10px; }
-        .btn-print-sales { background: var(--red); color: white; padding: 8px 12px; font-size: 0.7rem; }
-        .btn-print { background: #333; color: white; padding: 8px 12px; font-size: 0.7rem; }
-        
-        .btn-sell { background: var(--green); color: white; padding: 12px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; }
-        .btn-edit { background: #f1f1f1; color: #555; padding: 6px 10px; border-radius: 5px; border: 1px solid #ddd; }
-        .btn-undo { background: var(--blue); color: white; padding: 6px 10px; border-radius: 5px; }
-        .btn-del { background: var(--red); color: white; padding: 6px 10px; border-radius: 5px; }
-
-        .shop-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 30px; }
+        input, select { padding: 12px; border: 1px solid #ccc; border-radius: 8px; width: 100%; }
+        .btn { border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn-add { background: var(--gold); color: white; width: 100%; margin-top: 10px; }
+        .shop-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
         @media (min-width: 1024px) { .shop-grid { grid-template-columns: repeat(3, 1fr); } }
-        .column { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
-        .column h2 { color: var(--gold); font-size: 0.85rem; border-bottom: 2px solid #f9f9f9; padding-bottom: 8px; margin-bottom: 12px; text-align: center; }
-        table { width: 100%; border-collapse: separate; border-spacing: 0 5px; }
-        td { padding: 10px 8px; font-size: 0.9rem; border-top: 1px solid #eee; border-bottom: 1px solid #eee; }
-        .row-yellow { background-color: #fff9e6 !important; }
-        .row-white { background-color: #f2f2f2 !important; }
-        .row-rose { background-color: #fff0f5 !important; }
-        .row-mix { background-image: linear-gradient(to right, #fff9e6, #f2f2f2) !important; }
-        .model-info b { font-size: 1.05rem; display: block; color: #000; }
-        .badge-14kt { background: #ebebeb; color: #777; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; border: 1px solid #ddd; display: inline-block; }
-        
-        .sold-section { margin-top: 20px; border-top: 4px solid var(--red); padding-top: 20px; }
-        .sold-section h2.main-title { color: var(--red); text-align: center; font-size: 1.2rem; margin-bottom: 20px; }
-
-        @media print { .admin-panel, .btn-edit, .btn-undo, .btn-del, .btn-sell, .header button, #login-overlay { display: none !important; } }
-        body.print-sales-only .shop-grid:not(.sold-section .shop-grid), body.print-sales-only .admin-panel { display: none !important; }
+        .column { border: 1px solid var(--border); border-radius: 12px; padding: 10px; background: #fff; }
+        table { width: 100%; border-collapse: collapse; }
+        td { padding: 10px 5px; border-bottom: 1px solid #eee; font-size: 0.85rem; }
+        .row-yellow { background: #fff9e6; } .row-white { background: #f2f2f2; }
+        .sold-section { margin-top: 30px; border-top: 4px solid var(--red); padding-top: 20px; }
+        @media print { .admin-panel, #login-overlay, .btn-edit, .btn-sell, .btn-undo, .btn-del { display: none !important; } }
     </style>
 </head>
 <body>
@@ -68,7 +34,7 @@
 <div id="login-overlay">
     <div id="login-box">
         <h2>GPG INVENTORY</h2>
-        <input type="password" id="pass-input" placeholder="" autocapitalize="none" autocomplete="off" autocorrect="off">
+        <input type="password" id="pass-input" autocapitalize="none" autocomplete="off">
         <button id="login-btn" onclick="checkPass()">ENTER</button>
     </div>
 </div>
@@ -76,250 +42,122 @@
 <div id="app-content">
     <div class="header">
         <h1>GOLD POINT GROUP</h1>
-        <button class="btn btn-print-sales" onclick="printSales()">🖨️ SALES</button>
-        <button class="btn btn-print" onclick="window.print()">🖨️ ALL</button>
+        <button class="btn" style="background:#eee; font-size:10px;" onclick="requestNotificationPermission()">🔔 NOTIFY</button>
+        <button class="btn" style="background:var(--red); color:white; font-size:10px;" onclick="window.print()">🖨️ PRINT</button>
     </div>
 
-    <div class="admin-panel" id="top-form">
+    <div class="admin-panel">
         <div class="form-row">
-            <select id="res-shop">
-                <option value="GPG">GOLD POINT</option>
-                <option value="LBX">MELANTRICHOVA</option>
-                <option value="PALL">PALLADIUM</option>
-            </select>
-            <input type="text" id="res-kod" placeholder="Model Code">
+            <select id="res-shop"><option value="GPG">GOLD POINT</option><option value="LBX">MELANTRICHOVA</option><option value="PALL">PALLADIUM</option></select>
+            <input type="text" id="res-kod" placeholder="Code">
             <input type="text" id="res-mm" placeholder="MM">
-            <select id="res-barva">
-                <option value="Yellow">Yellow Gold</option>
-                <option value="White">White Gold</option>
-                <option value="Rose">Rose Gold</option>
-                <option value="Yellow & White">Yellow & White</option>
-            </select>
+            <select id="res-barva"><option value="Yellow">Yellow Gold</option><option value="White">White Gold</option><option value="Rose">Rose Gold</option></select>
             <input type="text" id="res-vel" placeholder="Size">
-            <div class="purity-label">585/1000 (14kt)</div>
         </div>
         <button class="btn btn-add" id="main-btn" onclick="handleAction()">+ ADD TO INVENTORY</button>
     </div>
 
-    <div class="shop-grid" id="inventory-grid">
-        <div class="column"><h2>STOCK: GOLD POINT (GPG)</h2><table id="table-GPG"><tbody></tbody></table></div>
-        <div class="column"><h2>STOCK: MELANTRICHOVA (LBX)</h2><table id="table-LBX"><tbody></tbody></table></div>
-        <div class="column"><h2>STOCK: PALLADIUM (PALL)</h2><table id="table-PALL"><tbody></tbody></table></div>
+    <div class="shop-grid">
+        <div class="column"><h2>STOCK: GPG</h2><table id="table-GPG"><tbody></tbody></table></div>
+        <div class="column"><h2>STOCK: LBX</h2><table id="table-LBX"><tbody></tbody></table></div>
+        <div class="column"><h2>STOCK: PALL</h2><table id="table-PALL"><tbody></tbody></table></div>
     </div>
 
     <div class="sold-section">
-        <h2 class="main-title">🔴 SOLD ITEMS REPORT</h2>
         <div class="shop-grid">
-            <div class="column"><h2>SOLD: GOLD POINT GROUP (GPG)</h2><table id="table-sold-GPG"><tbody></tbody></table></div>
-            <div class="column"><h2>SOLD: MELANTRICHOVA (LBX)</h2><table id="table-sold-LBX"><tbody></tbody></table></div>
-            <div class="column"><h2>SOLD: PALLADIUM (PALL)</h2><table id="table-sold-PALL"><tbody></tbody></table></div>
+            <div class="column"><h2>SOLD: GPG</h2><table id="table-sold-GPG"><tbody></tbody></table></div>
+            <div class="column"><h2>SOLD: LBX</h2><table id="table-sold-LBX"><tbody></tbody></table></div>
+            <div class="column"><h2>SOLD: PALL</h2><table id="table-sold-PALL"><tbody></tbody></table></div>
         </div>
     </div>
 </div>
 
 <script>
-    const MASTER_PASS = "kasa"; 
-
-    function checkPass() {
-        const input = document.getElementById('pass-input').value.toLowerCase();
-        if(input === MASTER_PASS) {
-            const now = new Date().getTime();
-            localStorage.setItem('gpg_auth', now);
-            unlockPage();
-        } else {
-            alert("Wrong password!");
-        }
-    }
-
-    function unlockPage() {
-        document.getElementById('login-overlay').style.display = 'none';
-        document.body.style.visibility = 'visible';
-    }
-
-    window.onload = function() {
-        const authTime = localStorage.getItem('gpg_auth');
-        const now = new Date().getTime();
-        if(authTime && (now - authTime < 24 * 60 * 60 * 1000)) {
-            unlockPage();
-        } else {
-            document.body.style.visibility = 'visible';
-        }
-    }
-
-    document.getElementById('pass-input').addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') checkPass();
-    });
-
+    const MASTER_PASS = "kasa";
     const S_URL = "https://sudafhyeiyqflupjberp.supabase.co";
     const S_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1ZGFmaHllaXlxZmx1cGpiZXJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDI3NjEsImV4cCI6MjA4OTY3ODc2MX0.7JmqOiSRiBo8qEHOkIhhhZv6I3zURuJdWNhe4x12LIs";
     const _supabase = supabase.createClient(S_URL, S_KEY);
 
+    // Login & Persistence
+    function checkPass() {
+        if(document.getElementById('pass-input').value.toLowerCase() === MASTER_PASS) {
+            localStorage.setItem('gpg_auth', new Date().getTime());
+            unlockPage();
+        } else { alert("Wrong!"); }
+    }
+    function unlockPage() { document.getElementById('login-overlay').style.display='none'; document.body.style.visibility='visible'; }
+    window.onload = () => { if(localStorage.getItem('gpg_auth')) unlockPage(); else document.body.style.visibility='visible'; };
+
+    // Service Worker & Notifications
+    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
+    async function requestNotificationPermission() {
+        const perm = await Notification.requestPermission();
+        if (perm === 'granted') alert("Notifications Enabled!");
+    }
+
+    // Realtime Listener
+    _supabase.channel('any').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'inventory' }, payload => {
+        if (payload.new.sold && !payload.old.sold) {
+            if (Notification.permission === 'granted') {
+                navigator.serviceWorker.ready.then(reg => {
+                    reg.showNotification("🔴 SHITJE E RE!", { body: `Modeli: ${payload.new.kod} ne ${payload.new.shop}` });
+                });
+            }
+        }
+        loadData();
+    }).subscribe();
+
     let inventory = [];
     let editModeId = null;
-    let addCounter = 0;
-
-    function translateColor(color) {
-        if(!color) return "";
-        let c = color.toLowerCase();
-        if(c.includes('žlut') || c === 'yellow') return "Yellow Gold";
-        if(c.includes('bíl') || c === 'white') return "White Gold";
-        if(c.includes('rose')) return "Rose Gold";
-        if(c.includes('&') || c.includes('mix')) return "Yellow & White";
-        return color;
-    }
-
-    function getColorClass(color) {
-        if(!color) return "";
-        let c = color.toLowerCase();
-        if(c.includes('žlut') || c === 'yellow') return "row-yellow";
-        if(c.includes('bíl') || c === 'white') return "row-white";
-        if(c.includes('rose')) return "row-rose";
-        if(c.includes('&') || c.includes('mix')) return "row-mix";
-        return "";
-    }
 
     async function loadData() {
-        const { data, error } = await _supabase.from('inventory').select('*').order('id', { ascending: false });
-        if (!error) { inventory = data; render(); }
+        const { data } = await _supabase.from('inventory').select('*').order('id', { ascending: false });
+        inventory = data || [];
+        render();
     }
 
-    function handleAction() {
-        if (editModeId) updateItem();
-        else addItem();
-    }
+    function handleAction() { if(editModeId) updateItem(); else addItem(); }
 
     async function addItem() {
-        const btn = document.getElementById('main-btn');
-        const kodVal = document.getElementById('res-kod').value;
-        const velVal = document.getElementById('res-vel').value;
-        if(!kodVal || !velVal) return alert("Enter Code and Size!");
-        btn.disabled = true;
-        const { error } = await _supabase.from('inventory').insert([{
+        const kod = document.getElementById('res-kod').value;
+        const vel = document.getElementById('res-vel').value;
+        if(!kod || !vel) return;
+        await _supabase.from('inventory').insert([{
             shop: document.getElementById('res-shop').value,
-            kod: kodVal,
-            mm: document.getElementById('res-mm').value,
+            kod: kod, mm: document.getElementById('res-mm').value,
             barva: document.getElementById('res-barva').value,
-            vel: velVal,
-            sold: false
+            vel: vel, sold: false
         }]);
-        if(!error) {
-            addCounter++;
-            if(addCounter >= 2) { document.getElementById('res-kod').value = ''; addCounter = 0; }
-            document.getElementById('res-vel').value = '';
-            await loadData();
-        }
-        btn.disabled = false;
+        document.getElementById('res-vel').value = '';
+        loadData();
     }
 
-    function startEdit(id) {
-        const item = inventory.find(i => i.id === id);
-        if(!item) return;
-        editModeId = id;
-        document.getElementById('res-shop').value = item.shop;
-        document.getElementById('res-kod').value = item.kod;
-        document.getElementById('res-mm').value = item.mm || '';
-        document.getElementById('res-barva').value = item.barva;
-        document.getElementById('res-vel').value = item.vel;
-        const btn = document.getElementById('main-btn');
-        btn.innerText = "💾 SAVE CHANGES";
-        btn.className = "btn btn-update";
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    async function updateItem() {
-        const btn = document.getElementById('main-btn');
-        const { error } = await _supabase.from('inventory').update({
-            shop: document.getElementById('res-shop').value,
-            kod: document.getElementById('res-kod').value,
-            mm: document.getElementById('res-mm').value,
-            barva: document.getElementById('res-barva').value,
-            vel: document.getElementById('res-vel').value
-        }).eq('id', editModeId);
-        if(!error) {
-            editModeId = null;
-            btn.innerText = "+ ADD TO INVENTORY";
-            btn.className = "btn btn-add";
-            document.getElementById('res-kod').value = '';
-            document.getElementById('res-vel').value = '';
-            addCounter = 0;
-            await loadData();
-        }
-    }
-
-    async function sellItem(id, kod, color, size) {
-        if(confirm(`ARE YOU SURE?\n\nSELL: ${kod}\nPURITY: 585/1000 (14kt)\nCOLOR: ${translateColor(color)}\nSIZE: ${size}`)) {
+    async function sellItem(id) {
+        if(confirm("Sell this?")) {
             const d = new Date();
-            const dataVeq = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
-            await _supabase.from('inventory').update({ sold: true, data_shitjes: dataVeq }).eq('id', id);
-            await loadData();
+            await _supabase.from('inventory').update({ sold: true, data_shitjes: `${d.getDate()}/${d.getMonth()+1}` }).eq('id', id);
+            loadData();
         }
-    }
-
-    async function undoSell(id) {
-        if(confirm("Return this item to stock?")) {
-            await _supabase.from('inventory').update({ sold: false, data_shitjes: null }).eq('id', id);
-            await loadData();
-        }
-    }
-
-    async function deleteItem(id) {
-        if(confirm("Delete permanently?")) {
-            await _supabase.from('inventory').delete().eq('id', id);
-            await loadData();
-        }
-    }
-
-    function printSales() {
-        document.body.classList.add('print-sales-only');
-        window.print();
-        setTimeout(() => document.body.classList.remove('print-sales-only'), 500);
     }
 
     function render() {
         const shops = ['GPG', 'LBX', 'PALL'];
         shops.forEach(s => {
-            const tbody = document.querySelector(`#table-${s} tbody`);
-            tbody.innerHTML = '';
-            inventory.filter(i => i.shop === s && !i.sold).forEach(i => {
-                const colorClass = getColorClass(i.barva);
-                tbody.innerHTML += `<tr class="${colorClass}">
-                    <td class="model-info">
-                        <b>${i.kod}</b>
-                        <small>${translateColor(i.barva)} ${i.mm}</small>
-                        <span class="badge-14kt">585/1000 (14kt)</span>
-                    </td>
-                    <td><b>${i.vel}</b></td>
-                    <td>
-                        <button class="btn-edit" onclick="startEdit(${i.id})">✎</button>
-                        <button class="btn-sell" onclick="sellItem(${i.id}, '${i.kod}', '${i.barva}', '${i.vel}')">SELL</button>
-                    </td>
+            const stockBody = document.querySelector(`#table-${s} tbody`);
+            const soldBody = document.querySelector(`#table-sold-${s} tbody`);
+            stockBody.innerHTML = ''; soldBody.innerHTML = '';
+            
+            inventory.filter(i => i.shop === s).forEach(i => {
+                const row = `<tr class="${i.barva === 'Yellow' ? 'row-yellow' : ''}">
+                    <td><b>${i.kod}</b><br><small>${i.barva} ${i.mm}</small></td>
+                    <td>${i.vel}</td>
+                    <td>${i.sold ? i.data_shitjes : `<button class="btn" style="background:var(--green); color:white;" onclick="sellItem(${i.id})">SELL</button>`}</td>
                 </tr>`;
-            });
-        });
-
-        shops.forEach(s => {
-            const tbody = document.querySelector(`#table-sold-${s} tbody`);
-            tbody.innerHTML = '';
-            inventory.filter(i => i.shop === s && i.sold).forEach(i => {
-                tbody.innerHTML += `<tr>
-                    <td class="model-info">
-                        <b>${i.kod}</b>
-                        <small>${translateColor(i.barva)}</small>
-                        <span class="badge-14kt">585/1000 (14kt)</span>
-                    </td>
-                    <td><b>${i.vel}</b></td>
-                    <td><small>${i.data_shitjes || ''}</small></td>
-                    <td>
-                        <button class="btn-edit" onclick="startEdit(${i.id})">✎</button>
-                        <button class="btn-undo" onclick="undoSell(${i.id})">↺</button>
-                        <button class="btn-del" onclick="deleteItem(${i.id})">X</button>
-                    </td>
-                </tr>`;
+                if(i.sold) soldBody.innerHTML += row; else stockBody.innerHTML += row;
             });
         });
     }
 
-    setInterval(loadData, 20000);
     loadData();
 </script>
 </body>
