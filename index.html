@@ -3,30 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GPG - Inventory</title>
+    <title>GPG - Inventory Management</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --gold: #BF9B30; --bg: #ffffff; --text: #111; --border: #eee; --red: #e74c3c; --green: #27ae60; --blue: #3498db; --orange: #f39c12; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; visibility: hidden; }
-        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #111; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; visibility: visible; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; }
+        
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #111; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
         #login-box { background: white; padding: 30px; border-radius: 15px; text-align: center; width: 280px; }
-        #pass-input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; text-align: center; font-size: 1.1rem; }
-        #login-btn { width: 100%; padding: 12px; background: var(--gold); color: white; border: none; border-radius: 8px; font-weight: bold; }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--gold); padding-bottom: 10px; margin-bottom: 15px; }
-        h1 { color: var(--gold); margin: 0; font-size: 0.9rem; text-transform: uppercase; }
-        .admin-panel { background: #fdfdfd; padding: 15px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 20px; }
+        #pass-input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; text-align: center; font-size: 1.1rem; outline: none; }
+        #login-btn { width: 100%; padding: 12px; background: var(--gold); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--gold); padding-bottom: 10px; margin-bottom: 15px; gap: 5px; }
+        h1 { color: var(--gold); margin: 0; font-size: 0.9rem; text-transform: uppercase; flex-grow: 1; }
+        
+        .admin-panel { background: #fdfdfd; padding: 15px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 20px; position: sticky; top: 10px; z-index: 100; }
         .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
-        input, select { padding: 12px; border: 1px solid #ccc; border-radius: 8px; width: 100%; }
-        .btn { border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        input, select { padding: 12px; border: 1px solid #ccc; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 0.9rem; outline: none; }
+        
+        .btn { border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.8rem; }
         .btn-add { background: var(--gold); color: white; width: 100%; margin-top: 10px; }
-        .shop-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        .btn-update { background: var(--orange); color: white; width: 100%; margin-top: 10px; }
+        .btn-sell { background: var(--green); color: white; padding: 10px 5px; }
+        .btn-edit { background: #f1f1f1; color: #555; border: 1px solid #ddd; }
+        .btn-undo { background: var(--blue); color: white; padding: 6px 10px; }
+        .btn-del { background: var(--red); color: white; padding: 6px 10px; }
+
+        .shop-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 30px; }
         @media (min-width: 1024px) { .shop-grid { grid-template-columns: repeat(3, 1fr); } }
-        .column { border: 1px solid var(--border); border-radius: 12px; padding: 10px; background: #fff; }
-        table { width: 100%; border-collapse: collapse; }
-        td { padding: 10px 5px; border-bottom: 1px solid #eee; font-size: 0.85rem; }
-        .row-yellow { background: #fff9e6; } .row-white { background: #f2f2f2; }
-        .sold-section { margin-top: 30px; border-top: 4px solid var(--red); padding-top: 20px; }
-        @media print { .admin-panel, #login-overlay, .btn-edit, .btn-sell, .btn-undo, .btn-del { display: none !important; } }
+        .column { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 10px; }
+        .column h2 { color: var(--gold); font-size: 0.8rem; text-align: center; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+
+        table { width: 100%; border-collapse: separate; border-spacing: 0 5px; }
+        td { padding: 10px 5px; font-size: 0.85rem; border-top: 1px solid #eee; border-bottom: 1px solid #eee; }
+        .row-yellow { background-color: #fff9e6 !important; }
+        .row-white { background-color: #f2f2f2 !important; }
+        .row-rose { background-color: #fff0f5 !important; }
+        .row-mix { background-image: linear-gradient(to right, #fff9e6, #f2f2f2) !important; }
+
+        .model-info b { font-size: 1rem; display: block; color: #000; }
+        .badge-14kt { background: #ebebeb; color: #777; font-size: 0.6rem; padding: 2px 5px; border-radius: 4px; display: inline-block; margin-top: 3px; }
+
+        .sold-section { margin-top: 20px; border-top: 4px solid var(--red); padding-top: 20px; }
+        .sold-section h2.main-title { color: var(--red); text-align: center; font-size: 1.1rem; }
+
+        @media print { .admin-panel, .btn-edit, .btn-undo, .btn-del, .btn-sell, .header button, #login-overlay { display: none !important; } }
     </style>
 </head>
 <body>
@@ -42,16 +63,16 @@
 <div id="app-content">
     <div class="header">
         <h1>GOLD POINT GROUP</h1>
-        <button class="btn" style="background:#eee; font-size:10px;" onclick="requestNotificationPermission()">🔔 NOTIFY</button>
-        <button class="btn" style="background:var(--red); color:white; font-size:10px;" onclick="window.print()">🖨️ PRINT</button>
+        <button class="btn" style="background:#333; color:gold;" onclick="requestNotificationPermission()">🔔 NOTIFY</button>
+        <button class="btn" style="background:var(--red); color:white;" onclick="window.print()">🖨️ PRINT</button>
     </div>
 
-    <div class="admin-panel">
+    <div class="admin-panel" id="top-form">
         <div class="form-row">
             <select id="res-shop"><option value="GPG">GOLD POINT</option><option value="LBX">MELANTRICHOVA</option><option value="PALL">PALLADIUM</option></select>
-            <input type="text" id="res-kod" placeholder="Code">
+            <input type="text" id="res-kod" placeholder="Model Code">
             <input type="text" id="res-mm" placeholder="MM">
-            <select id="res-barva"><option value="Yellow">Yellow Gold</option><option value="White">White Gold</option><option value="Rose">Rose Gold</option></select>
+            <select id="res-barva"><option value="Yellow">Yellow Gold</option><option value="White">White Gold</option><option value="Rose">Rose Gold</option><option value="Yellow & White">Yellow & White</option></select>
             <input type="text" id="res-vel" placeholder="Size">
         </div>
         <button class="btn btn-add" id="main-btn" onclick="handleAction()">+ ADD TO INVENTORY</button>
@@ -64,10 +85,11 @@
     </div>
 
     <div class="sold-section">
+        <h2 class="main-title">🔴 SOLD ITEMS REPORT</h2>
         <div class="shop-grid">
-            <div class="column"><h2>SOLD: GPG</h2><table id="table-sold-GPG"><tbody></tbody></table></div>
-            <div class="column"><h2>SOLD: LBX</h2><table id="table-sold-LBX"><tbody></tbody></table></div>
-            <div class="column"><h2>SOLD: PALL</h2><table id="table-sold-PALL"><tbody></tbody></table></div>
+            <div class="column"><h2>SOLD: GOLD POINT GROUP (GPG)</h2><table id="table-sold-GPG"><tbody></tbody></table></div>
+            <div class="column"><h2>SOLD: MELANTRICHOVA (LBX)</h2><table id="table-sold-LBX"><tbody></tbody></table></div>
+            <div class="column"><h2>SOLD: PALLADIUM (PALL)</h2><table id="table-sold-PALL"><tbody></tbody></table></div>
         </div>
     </div>
 </div>
@@ -78,26 +100,48 @@
     const S_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1ZGFmaHllaXlxZmx1cGpiZXJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDI3NjEsImV4cCI6MjA4OTY3ODc2MX0.7JmqOiSRiBo8qEHOkIhhhZv6I3zURuJdWNhe4x12LIs";
     const _supabase = supabase.createClient(S_URL, S_KEY);
 
-    // Login & Persistence
+    let inventory = [];
+    let editModeId = null;
+
+    // Helper functions for colors
+    function translateColor(color) {
+        if(!color) return "";
+        let c = color.toLowerCase();
+        if(c.includes('yellow')) return "Yellow Gold";
+        if(c.includes('white')) return "White Gold";
+        if(c.includes('rose')) return "Rose Gold";
+        if(c.includes('&') || c.includes('mix')) return "Yellow & White";
+        return color;
+    }
+
+    function getColorClass(color) {
+        if(!color) return "";
+        let c = color.toLowerCase();
+        if(c.includes('yellow')) return "row-yellow";
+        if(c.includes('white')) return "row-white";
+        if(c.includes('rose')) return "row-rose";
+        if(c.includes('&') || c.includes('mix')) return "row-mix";
+        return "";
+    }
+
     function checkPass() {
         if(document.getElementById('pass-input').value.toLowerCase() === MASTER_PASS) {
             localStorage.setItem('gpg_auth', new Date().getTime());
             unlockPage();
-        } else { alert("Wrong!"); }
+        } else { alert("Wrong password!"); }
     }
-    function unlockPage() { document.getElementById('login-overlay').style.display='none'; document.body.style.visibility='visible'; }
-    window.onload = () => { if(localStorage.getItem('gpg_auth')) unlockPage(); else document.body.style.visibility='visible'; };
+    function unlockPage() { document.getElementById('login-overlay').style.display='none'; }
+    window.onload = () => { if(localStorage.getItem('gpg_auth')) unlockPage(); };
 
-    // Service Worker & Notifications
+    // Notifications Logic
     if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
     async function requestNotificationPermission() {
         const perm = await Notification.requestPermission();
         if (perm === 'granted') alert("Notifications Enabled!");
     }
 
-    // Realtime Listener
-    _supabase.channel('any').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'inventory' }, payload => {
-        if (payload.new.sold && !payload.old.sold) {
+    _supabase.channel('db-changes').on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, payload => {
+        if (payload.eventType === 'UPDATE' && payload.new.sold && !payload.old.sold) {
             if (Notification.permission === 'granted') {
                 navigator.serviceWorker.ready.then(reg => {
                     reg.showNotification("🔴 SHITJE E RE!", { body: `Modeli: ${payload.new.kod} ne ${payload.new.shop}` });
@@ -106,9 +150,6 @@
         }
         loadData();
     }).subscribe();
-
-    let inventory = [];
-    let editModeId = null;
 
     async function loadData() {
         const { data } = await _supabase.from('inventory').select('*').order('id', { ascending: false });
@@ -119,23 +160,66 @@
     function handleAction() { if(editModeId) updateItem(); else addItem(); }
 
     async function addItem() {
-        const kod = document.getElementById('res-kod').value;
-        const vel = document.getElementById('res-vel').value;
-        if(!kod || !vel) return;
+        const kodVal = document.getElementById('res-kod').value;
+        const velVal = document.getElementById('res-vel').value;
+        if(!kodVal || !velVal) return alert("Enter Code and Size!");
         await _supabase.from('inventory').insert([{
             shop: document.getElementById('res-shop').value,
-            kod: kod, mm: document.getElementById('res-mm').value,
+            kod: kodVal, mm: document.getElementById('res-mm').value,
             barva: document.getElementById('res-barva').value,
-            vel: vel, sold: false
+            vel: velVal, sold: false
         }]);
         document.getElementById('res-vel').value = '';
         loadData();
     }
 
-    async function sellItem(id) {
-        if(confirm("Sell this?")) {
+    function startEdit(id) {
+        const i = inventory.find(x => x.id === id);
+        editModeId = id;
+        document.getElementById('res-shop').value = i.shop;
+        document.getElementById('res-kod').value = i.kod;
+        document.getElementById('res-mm').value = i.mm || '';
+        document.getElementById('res-barva').value = i.barva;
+        document.getElementById('res-vel').value = i.vel;
+        const btn = document.getElementById('main-btn');
+        btn.innerText = "💾 SAVE CHANGES";
+        btn.className = "btn btn-update";
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function updateItem() {
+        await _supabase.from('inventory').update({
+            shop: document.getElementById('res-shop').value,
+            kod: document.getElementById('res-kod').value,
+            mm: document.getElementById('res-mm').value,
+            barva: document.getElementById('res-barva').value,
+            vel: document.getElementById('res-vel').value
+        }).eq('id', editModeId);
+        editModeId = null;
+        document.getElementById('main-btn').innerText = "+ ADD TO INVENTORY";
+        document.getElementById('main-btn').className = "btn btn-add";
+        loadData();
+    }
+
+    async function sellItem(id, kod, barva, vel) {
+        if(confirm(`SELL: ${kod} - ${vel}?`)) {
             const d = new Date();
-            await _supabase.from('inventory').update({ sold: true, data_shitjes: `${d.getDate()}/${d.getMonth()+1}` }).eq('id', id);
+            const dateStr = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+            await _supabase.from('inventory').update({ sold: true, data_shitjes: dateStr }).eq('id', id);
+            loadData();
+        }
+    }
+
+    async function undoSell(id) {
+        if(confirm("Return to stock?")) {
+            await _supabase.from('inventory').update({ sold: false, data_shitjes: null }).eq('id', id);
+            loadData();
+        }
+    }
+
+    async function deleteItem(id) {
+        if(confirm("Delete permanently?")) {
+            await _supabase.from('inventory').delete().eq('id', id);
             loadData();
         }
     }
@@ -143,17 +227,34 @@
     function render() {
         const shops = ['GPG', 'LBX', 'PALL'];
         shops.forEach(s => {
-            const stockBody = document.querySelector(`#table-${s} tbody`);
-            const soldBody = document.querySelector(`#table-sold-${s} tbody`);
-            stockBody.innerHTML = ''; soldBody.innerHTML = '';
+            const stockTable = document.querySelector(`#table-${s} tbody`);
+            const soldTable = document.querySelector(`#table-sold-${s} tbody`);
+            stockTable.innerHTML = ''; soldTable.innerHTML = '';
             
             inventory.filter(i => i.shop === s).forEach(i => {
-                const row = `<tr class="${i.barva === 'Yellow' ? 'row-yellow' : ''}">
-                    <td><b>${i.kod}</b><br><small>${i.barva} ${i.mm}</small></td>
-                    <td>${i.vel}</td>
-                    <td>${i.sold ? i.data_shitjes : `<button class="btn" style="background:var(--green); color:white;" onclick="sellItem(${i.id})">SELL</button>`}</td>
-                </tr>`;
-                if(i.sold) soldBody.innerHTML += row; else stockBody.innerHTML += row;
+                const colorClass = getColorClass(i.barva);
+                
+                if(!i.sold) {
+                    stockTable.innerHTML += `<tr class="${colorClass}">
+                        <td class="model-info"><b>${i.kod}</b><small>${translateColor(i.barva)} ${i.mm || ''}</small><span class="badge-14kt">14kt</span></td>
+                        <td><b>${i.vel}</b></td>
+                        <td>
+                            <button class="btn-edit" onclick="startEdit(${i.id})">✎</button>
+                            <button class="btn-sell" onclick="sellItem(${i.id},'${i.kod}','${i.barva}','${i.vel}')">SELL</button>
+                        </td>
+                    </tr>`;
+                } else {
+                    soldTable.innerHTML += `<tr>
+                        <td class="model-info"><b>${i.kod}</b><small>${translateColor(i.barva)}</small></td>
+                        <td><b>${i.vel}</b></td>
+                        <td><small>${i.data_shitjes || ''}</small></td>
+                        <td>
+                            <button class="btn-edit" onclick="startEdit(${i.id})">✎</button>
+                            <button class="btn-undo" onclick="undoSell(${i.id})">↺</button>
+                            <button class="btn-del" onclick="deleteItem(${i.id})">X</button>
+                        </td>
+                    </tr>`;
+                }
             });
         });
     }
