@@ -10,16 +10,23 @@
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 14px; padding-bottom: 50px; }
         header { display: flex; justify-content: center; align-items: center; padding: 15px 5px; border-bottom: 2px solid var(--gold); margin-bottom: 15px; background: white; border-radius: 0 0 15px 15px; }
         header h1 { font-size: 1.1rem; color: var(--gold); margin: 0; letter-spacing: 1px; }
+        
         .admin-panel { background: var(--card); padding: 15px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #ddd; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        input, select { padding: 11px; border-radius: 8px; border: 1px solid #ccc; width: 100%; font-size: 0.9rem; outline: none; }
+        input, select { padding: 11px; border-radius: 8px; border: 1px solid #ccc; width: 100%; font-size: 0.9rem; outline: none; box-sizing: border-box; }
+        
+        .search-container { margin-bottom: 20px; position: sticky; top: 10px; z-index: 100; }
+        .search-input { border: 2px solid var(--gold) !important; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+
         .btn-add { background: var(--gold); color: white; border: none; width: 100%; padding: 13px; border-radius: 10px; font-weight: bold; margin-top: 10px; cursor: pointer; }
         .main-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; align-items: start; }
         .column h2 { font-size: 0.7rem; text-align: center; color: white; background: var(--gold); padding: 8px 2px; border-radius: 8px; margin-bottom: 12px; text-transform: uppercase; }
         .column.sold-col h2 { background: var(--red); }
+        
         .item-card { background: var(--card); border-radius: 10px; padding: 10px; margin-bottom: 10px; border: 1px solid #eee; position: relative; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .item-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
         .yellow::before { background: #f1c40f; } .white::before { background: #bdc3c7; border: 1px solid #aaa; } .rose::before { background: #e67e22; } .mix::before { background: linear-gradient(to bottom, #f1c40f, #bdc3c7); }
+        
         .item-card b { display: block; font-size: 0.85rem; margin-bottom: 2px; color: #000; }
         .size-tag { font-weight: bold; color: var(--gold); font-size: 0.85rem; margin: 4px 0; background: #fdf9ea; padding: 2px 4px; border-radius: 4px; align-self: flex-start; }
         .actions { display: flex; gap: 4px; margin-top: 5px; }
@@ -52,6 +59,10 @@
     <button class="btn-add" id="main-btn" onclick="handleAction()">+ ADD ITEM</button>
 </div>
 
+<div class="search-container">
+    <input type="text" id="search-input" class="search-input" placeholder="🔍 KERKO MODELIN..." onkeyup="render()">
+</div>
+
 <div class="main-grid">
     <div class="column"><h2>GPG STOCK</h2><div id="stock-GPG"></div></div>
     <div class="column"><h2>LBX STOCK</h2><div id="stock-LBX"></div></div>
@@ -77,20 +88,12 @@
     _supabase.channel('db-realtime').on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, () => loadData()).subscribe();
 
     async function sendPush(shopID, details) {
-        let titleText = "";
-        if(shopID === "GPG") titleText = "SHITJE E RE GOLD POINT";
-        else if(shopID === "LBX") titleText = "SHITJE E RE MELANTRICHOVA";
-        else if(shopID === "PALL") titleText = "SHITJE E RE NE PALLADIUM";
-
-        fetch('https://ntfy.sh/goldsale_gpg', {
-            method: 'POST',
-            body: details,
-            headers: { 'Title': titleText, 'Priority': '5', 'Tags': 'money,ring' }
-        });
+        let titleText = (shopID === "GPG") ? "SHITJE E RE GOLD POINT" : (shopID === "LBX") ? "SHITJE E RE MELANTRICHOVA" : "SHITJE E RE NE PALLADIUM";
+        fetch('https://ntfy.sh/goldsale_gpg', { method: 'POST', body: details, headers: { 'Title': titleText, 'Priority': '5', 'Tags': 'money,ring' } });
     }
 
     async function loadData() {
-        const { data } = await _supabase.from('inventory').select('*').order('id', { ascending: false });
+        const { data } = await _supabase.from('inventory').select('*');
         inventory = data || [];
         render();
     }
@@ -101,29 +104,19 @@
         const kod = document.getElementById('res-kod').value;
         const vel = document.getElementById('res-vel').value;
         if(!kod || !vel) return;
-        await _supabase.from('inventory').insert([{
-            shop: document.getElementById('res-shop').value, kod: kod, 
-            mm: document.getElementById('res-mm').value, barva: document.getElementById('res-barva').value,
-            vel: vel, sold: false
-        }]);
+        await _supabase.from('inventory').insert([{ shop: document.getElementById('res-shop').value, kod: kod, mm: document.getElementById('res-mm').value, barva: document.getElementById('res-barva').value, vel: vel, sold: false }]);
         resetForm(); loadData();
     }
 
     async function updateItem() {
-        await _supabase.from('inventory').update({
-            shop: document.getElementById('res-shop').value, kod: document.getElementById('res-kod').value,
-            mm: document.getElementById('res-mm').value, barva: document.getElementById('res-barva').value,
-            vel: document.getElementById('res-vel').value
-        }).eq('id', editModeId);
+        await _supabase.from('inventory').update({ shop: document.getElementById('res-shop').value, kod: document.getElementById('res-kod').value, mm: document.getElementById('res-mm').value, barva: document.getElementById('res-barva').value, vel: document.getElementById('res-vel').value }).eq('id', editModeId);
         editModeId = null; resetForm(); loadData();
     }
 
     async function sellItem(id) {
         const item = inventory.find(x => x.id === id);
         if(confirm("Konfirmo shitjen: " + item.kod + "?")) {
-            let details = `Unaza: ${item.kod}\nNgjyra: ${item.barva}\nMM: ${item.mm || 'N/A'}\nMadhësia: ${item.vel}`;
-            sendPush(item.shop, details);
-
+            sendPush(item.shop, `Unaza: ${item.kod}\nNgjyra: ${item.barva}\nMM: ${item.mm || 'N/A'}\nMadhësia: ${item.vel}`);
             const d = new Date();
             const dateStr = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
             await _supabase.from('inventory').update({ sold: true, data_shitjes: dateStr }).eq('id', id);
@@ -148,15 +141,30 @@
     function resetForm() { document.getElementById('res-kod').value = ''; document.getElementById('res-mm').value = ''; document.getElementById('res-vel').value = ''; document.getElementById('main-btn').innerText = "+ ADD ITEM"; }
 
     function render() {
+        const searchTerm = document.getElementById('search-input').value.toLowerCase();
         const targets = ['stock-GPG', 'stock-LBX', 'stock-PALL', 'sold-GPG', 'sold-LBX', 'sold-PALL'];
         targets.forEach(id => { if(document.getElementById(id)) document.getElementById(id).innerHTML = ''; });
-        inventory.forEach(i => {
+
+        // LOGJIKA E RENDITJES: F3 parat, pastaj SOL, pastaj tjerat
+        const sortedInventory = [...inventory].sort((a, b) => {
+            const getPriority = (kod) => {
+                const k = kod.toUpperCase();
+                if (k.includes('F3')) return 1;
+                if (k.includes('SOL')) return 2;
+                return 3;
+            };
+            return getPriority(a.kod) - getPriority(b.kod);
+        });
+
+        sortedInventory.forEach(i => {
+            if (searchTerm && !i.kod.toLowerCase().includes(searchTerm)) return;
             const containerId = (i.sold ? 'sold-' : 'stock-') + i.shop;
             const target = document.getElementById(containerId);
             if(!target) return;
+            
             target.innerHTML += `
                 <div class="item-card ${i.barva.toLowerCase()}">
-                    <b>${i.kod}</b>
+                    <b>${i.kod} ${searchTerm ? `<small style="color:blue">[${i.shop}]</small>` : ''}</b>
                     <small>${i.barva} Gold ${i.mm ? i.mm+'mm' : ''}</small>
                     <div class="size-tag">${i.vel}</div>
                     ${i.sold ? `<span class="sold-date">${i.data_shitjes}</span>` : ''}
