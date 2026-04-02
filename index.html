@@ -34,36 +34,23 @@
         .admin-panel { background: var(--card); padding: 15px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #ddd; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         input, select { padding: 11px; border-radius: 8px; border: 1px solid #ccc; width: 100%; font-size: 0.9rem; outline: none; }
-        input:focus { border-color: var(--gold); }
         .btn-add { background: var(--gold); color: white; border: none; width: 100%; padding: 13px; border-radius: 10px; font-weight: bold; margin-top: 10px; font-size: 0.95rem; cursor: pointer; transition: 0.2s; }
         .btn-update { background: var(--blue); color: white; }
 
         /* Layout 3 Kolona */
-        .main-grid { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 10px; 
-            align-items: start;
-        }
+        .main-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; align-items: start; }
+        @media (max-width: 768px) { .main-grid { gap: 5px; } }
 
-        @media (max-width: 768px) {
-            .main-grid { gap: 5px; }
-        }
-
-        /* Column Styling */
-        .column { background: transparent; min-height: 100px; }
         .column h2 { 
             font-size: 0.7rem; text-align: center; color: white; background: var(--gold); 
-            padding: 8px 2px; border-radius: 8px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;
+            padding: 8px 2px; border-radius: 8px; margin-bottom: 12px; text-transform: uppercase;
         }
         .column.sold-col h2 { background: var(--red); }
 
-        /* Card Styling */
         .item-card { 
             background: var(--card); border-radius: 10px; padding: 10px; margin-bottom: 10px; 
             border: 1px solid #eee; box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-            position: relative; overflow: hidden;
-            display: flex; flex-direction: column;
+            position: relative; overflow: hidden; display: flex; flex-direction: column;
         }
         .item-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
         .yellow::before { background: #f1c40f; }
@@ -71,27 +58,17 @@
         .rose::before { background: #e67e22; }
         .mix::before { background: linear-gradient(to bottom, #f1c40f, #bdc3c7); }
 
-        .item-card b { display: block; font-size: 0.95rem; margin-bottom: 2px; color: #000; }
-        .item-card small { font-size: 0.75rem; color: #7f8c8d; display: block; line-height: 1.2; }
-        .size-tag { font-weight: bold; color: var(--gold); font-size: 0.9rem; margin: 6px 0; background: #fdf9ea; padding: 2px 6px; border-radius: 4px; align-self: flex-start; }
+        .item-card b { display: block; font-size: 0.85rem; margin-bottom: 2px; color: #000; }
+        .size-tag { font-weight: bold; color: var(--gold); font-size: 0.85rem; margin: 4px 0; background: #fdf9ea; padding: 2px 4px; border-radius: 4px; align-self: flex-start; }
 
         .actions { display: flex; gap: 4px; margin-top: 5px; }
-        .btn-act { border: none; padding: 7px 4px; border-radius: 6px; font-size: 0.65rem; font-weight: bold; cursor: pointer; flex: 1; transition: 0.1s; }
+        .btn-act { border: none; padding: 7px 4px; border-radius: 6px; font-size: 0.65rem; font-weight: bold; cursor: pointer; flex: 1; }
         .btn-sell { background: var(--green); color: white; }
         .btn-edit { background: #f5f5f5; color: #333; border: 1px solid #ddd; }
         .btn-undo { background: var(--blue); color: white; }
         .btn-del { background: var(--red); color: white; }
 
         .sold-date { font-size: 0.65rem; color: var(--red); font-weight: bold; display: block; margin-top: 5px; text-align: center; border-top: 1px solid #feebeb; padding-top: 4px; }
-
-        @media (max-width: 600px) {
-            .item-card { padding: 8px 5px; }
-            .item-card b { font-size: 0.85rem; }
-            .size-tag { font-size: 0.8rem; }
-            .btn-act { font-size: 0.6rem; padding: 6px 2px; }
-        }
-
-        @media print { .admin-panel, .actions, header, #login-overlay { display: none; } }
     </style>
 </head>
 <body>
@@ -99,16 +76,16 @@
 <div id="login-overlay">
     <div class="login-box">
         <h2>GPG CONTROL</h2>
-        <input type="password" id="pass-input" placeholder="Password" autocapitalize="none">
-        <button id="login-btn" onclick="checkPass()">ENTER SYSTEM</button>
+        <input type="password" id="pass-input" placeholder="Password">
+        <button id="login-btn" onclick="checkPass()">ENTER</button>
     </div>
 </div>
 
 <header>
-    <h1>GOLD POINT GROUP (GPG)</h1>
+    <h1>GOLD POINT GROUP</h1>
 </header>
 
-<div class="admin-panel" id="top-form">
+<div class="admin-panel">
     <div class="form-row">
         <select id="res-shop" style="grid-column: span 2;">
             <option value="GPG">GOLD POINT (GPG)</option>
@@ -134,8 +111,8 @@
     <div class="column"><h2>PALL STOCK</h2><div id="stock-PALL"></div></div>
 </div>
 
-<div style="margin: 40px 0 20px; text-align: center;">
-    <h3 style="color: var(--red); font-size: 1rem; border-top: 2px dashed #ccc; padding-top: 20px; letter-spacing: 2px;">🔴 SOLD HISTORY</h3>
+<div style="margin: 30px 0 10px; text-align: center;">
+    <h3 style="color: var(--red); font-size: 0.9rem; border-top: 2px dashed #ccc; padding-top: 15px;">🔴 SOLD HISTORY</h3>
 </div>
 
 <div class="main-grid">
@@ -152,41 +129,34 @@
     let inventory = [];
     let editModeId = null;
 
-    // --- PUSH TEAM API KEY ---
-    const TEAM_API_KEY = "QedD1nUw$q"; 
+    // --- PUSH NOTIFICATION SETUP ---
+    const PUSH_KEY = "572383a2-d33a-4a9b-8e3a-3529d40579ce";
 
-    async function sendPushNotification(msg) {
+    async function sendPush(msg) {
         try {
             await fetch('https://api.pushalert.co/v1/send', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    "api_key": TEAM_API_KEY,
-                    "title": "GPG - SHITJE E RE 🔴",
-                    "message": msg,
-                    "team": true 
+                    "api_key": PUSH_KEY,
+                    "title": "GPG - SHITJE 🔴",
+                    "message": msg
                 })
             });
-            console.log("Push Notification Sent");
-        } catch (err) {
-            console.error("Push Error:", err);
-        }
+        } catch (e) { console.error(e); }
     }
 
-    // --- AUTH ---
     function checkPass() {
         if(document.getElementById('pass-input').value.toLowerCase() === "kasa") {
-            localStorage.setItem('gpg_auth_vfinal_light_ntfy', 'true');
+            localStorage.setItem('gpg_auth_vfinal_push', 'true');
             document.getElementById('login-overlay').style.display='none';
-        } else { alert("Correct!"); }
+        }
     }
-    if(localStorage.getItem('gpg_auth_vfinal_light_ntfy')) document.getElementById('login-overlay').style.display='none';
+    if(localStorage.getItem('gpg_auth_vfinal_push')) document.getElementById('login-overlay').style.display='none';
 
-    // --- REALTIME UPDATES & PUSH ---
     _supabase.channel('db').on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, payload => {
         if (payload.eventType === 'UPDATE' && payload.new.sold && !payload.old.sold) {
-            const tekst = `Modeli: ${payload.new.kod} (${payload.new.shop})`;
-            sendPushNotification(tekst); 
+            sendPush(`${payload.new.kod} (${payload.new.shop})`);
         }
         loadData();
     }).subscribe();
@@ -202,7 +172,7 @@
     async function addItem() {
         const kod = document.getElementById('res-kod').value;
         const vel = document.getElementById('res-vel').value;
-        if(!kod || !vel) return alert("Code & Size required!");
+        if(!kod || !vel) return;
         await _supabase.from('inventory').insert([{
             shop: document.getElementById('res-shop').value,
             kod: kod, mm: document.getElementById('res-mm').value,
@@ -229,9 +199,7 @@
         document.getElementById('res-mm').value = i.mm || '';
         document.getElementById('res-barva').value = i.barva;
         document.getElementById('res-vel').value = i.vel;
-        const btn = document.getElementById('main-btn');
-        btn.innerText = "SAVE CHANGES";
-        btn.className = "btn-add btn-update";
+        document.getElementById('main-btn').innerText = "SAVE CHANGES";
         window.scrollTo(0,0);
     }
 
@@ -244,22 +212,18 @@
     }
 
     async function undoSell(id) {
-        if(confirm("Return to stock?")) {
-            await _supabase.from('inventory').update({ sold: false, data_shitjes: null }).eq('id', id);
-        }
+        await _supabase.from('inventory').update({ sold: false, data_shitjes: null }).eq('id', id);
     }
 
     async function deleteItem(id) {
-        if(confirm("Delete permanently?")) await _supabase.from('inventory').delete().eq('id', id);
+        if(confirm("Delete?")) await _supabase.from('inventory').delete().eq('id', id);
     }
 
     function resetForm() {
         document.getElementById('res-kod').value = ''; 
         document.getElementById('res-mm').value = '';
         document.getElementById('res-vel').value = ''; 
-        const btn = document.getElementById('main-btn');
-        btn.innerText = "+ ADD ITEM";
-        btn.className = "btn-add";
+        document.getElementById('main-btn').innerText = "+ ADD ITEM";
     }
 
     function render() {
