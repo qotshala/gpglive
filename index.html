@@ -6,66 +6,29 @@
     <title>GPG Inventory Control</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root {
-            --gold: #BF9B30;
-            --bg: #f4f7f6;
-            --card: #ffffff;
-            --text: #2c3e50;
-            --red: #e74c3c;
-            --green: #27ae60;
-            --blue: #3498db;
-        }
-
-        body { 
-            font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); 
-            margin: 0; padding: 10px; font-size: 14px; padding-bottom: 50px;
-        }
-
-        /* Login */
+        :root { --gold: #BF9B30; --bg: #f4f7f6; --card: #ffffff; --text: #2c3e50; --red: #e74c3c; --green: #27ae60; --blue: #3498db; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 14px; padding-bottom: 50px; }
         #login-overlay { position: fixed; inset: 0; background: #111; display: flex; justify-content: center; align-items: center; z-index: 9999; }
         .login-box { background: white; padding: 30px; border-radius: 20px; text-align: center; width: 85%; max-width: 350px; }
         #pass-input { width: 100%; padding: 15px; margin: 15px 0; border: 1px solid #ddd; border-radius: 10px; text-align: center; font-size: 1.2rem; outline: none; }
-        #login-btn { width: 100%; padding: 15px; background: var(--gold); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1.1rem; }
-
+        #login-btn { width: 100%; padding: 15px; background: var(--gold); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
         header { display: flex; justify-content: center; align-items: center; padding: 15px 5px; border-bottom: 2px solid var(--gold); margin-bottom: 15px; background: white; border-radius: 0 0 15px 15px; }
         header h1 { font-size: 1.1rem; color: var(--gold); margin: 0; letter-spacing: 1px; }
-
         .admin-panel { background: var(--card); padding: 15px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #ddd; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         input, select { padding: 11px; border-radius: 8px; border: 1px solid #ccc; width: 100%; font-size: 0.9rem; outline: none; }
-        .btn-add { background: var(--gold); color: white; border: none; width: 100%; padding: 13px; border-radius: 10px; font-weight: bold; margin-top: 10px; font-size: 0.95rem; cursor: pointer; }
-
-        /* Layout 3 Kolona */
+        .btn-add { background: var(--gold); color: white; border: none; width: 100%; padding: 13px; border-radius: 10px; font-weight: bold; margin-top: 10px; cursor: pointer; }
         .main-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; align-items: start; }
-        @media (max-width: 768px) { .main-grid { gap: 5px; } }
-
-        .column h2 { 
-            font-size: 0.7rem; text-align: center; color: white; background: var(--gold); 
-            padding: 8px 2px; border-radius: 8px; margin-bottom: 12px; text-transform: uppercase;
-        }
+        .column h2 { font-size: 0.7rem; text-align: center; color: white; background: var(--gold); padding: 8px 2px; border-radius: 8px; margin-bottom: 12px; text-transform: uppercase; }
         .column.sold-col h2 { background: var(--red); }
-
-        .item-card { 
-            background: var(--card); border-radius: 10px; padding: 10px; margin-bottom: 10px; 
-            border: 1px solid #eee; box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-            position: relative; overflow: hidden; display: flex; flex-direction: column;
-        }
+        .item-card { background: var(--card); border-radius: 10px; padding: 10px; margin-bottom: 10px; border: 1px solid #eee; position: relative; overflow: hidden; display: flex; flex-direction: column; }
         .item-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
-        .yellow::before { background: #f1c40f; }
-        .white::before { background: #bdc3c7; border: 1px solid #aaa; }
-        .rose::before { background: #e67e22; }
-        .mix::before { background: linear-gradient(to bottom, #f1c40f, #bdc3c7); }
-
+        .yellow::before { background: #f1c40f; } .white::before { background: #bdc3c7; border: 1px solid #aaa; } .rose::before { background: #e67e22; } .mix::before { background: linear-gradient(to bottom, #f1c40f, #bdc3c7); }
         .item-card b { display: block; font-size: 0.85rem; margin-bottom: 2px; color: #000; }
         .size-tag { font-weight: bold; color: var(--gold); font-size: 0.85rem; margin: 4px 0; background: #fdf9ea; padding: 2px 4px; border-radius: 4px; align-self: flex-start; }
-
         .actions { display: flex; gap: 4px; margin-top: 5px; }
         .btn-act { border: none; padding: 7px 4px; border-radius: 6px; font-size: 0.65rem; font-weight: bold; cursor: pointer; flex: 1; }
-        .btn-sell { background: var(--green); color: white; }
-        .btn-edit { background: #f5f5f5; color: #333; border: 1px solid #ddd; }
-        .btn-undo { background: var(--blue); color: white; }
-        .btn-del { background: var(--red); color: white; }
-
+        .btn-sell { background: var(--green); color: white; } .btn-edit { background: #f5f5f5; color: #333; border: 1px solid #ddd; } .btn-undo { background: var(--blue); color: white; } .btn-del { background: var(--red); color: white; }
         .sold-date { font-size: 0.65rem; color: var(--red); font-weight: bold; display: block; margin-top: 5px; text-align: center; border-top: 1px solid #feebeb; padding-top: 4px; }
     </style>
 </head>
@@ -79,9 +42,7 @@
     </div>
 </div>
 
-<header>
-    <h1>GOLD POINT GROUP</h1>
-</header>
+<header><h1>GOLD POINT GROUP</h1></header>
 
 <div class="admin-panel">
     <div class="form-row">
@@ -109,9 +70,7 @@
     <div class="column"><h2>PALL STOCK</h2><div id="stock-PALL"></div></div>
 </div>
 
-<div style="margin: 30px 0 10px; text-align: center;">
-    <h3 style="color: var(--red); font-size: 0.9rem; border-top: 2px dashed #ccc; padding-top: 15px;">🔴 SOLD HISTORY</h3>
-</div>
+<div style="margin: 30px 0 10px; text-align: center;"><h3 style="color: var(--red); font-size: 0.9rem; border-top: 2px dashed #ccc; padding-top: 15px;">🔴 SOLD HISTORY</h3></div>
 
 <div class="main-grid">
     <div class="column sold-col"><h2>GPG SOLD</h2><div id="sold-GPG"></div></div>
@@ -127,36 +86,33 @@
     let inventory = [];
     let editModeId = null;
 
-    // --- NTFY.SH CONFIGURATION ---
-    async function sendPushNotification(msg) {
+    // --- FUNKSIONI I NJOFTIMIT (I rregulluar) ---
+    async function sendPush(msg) {
         try {
             await fetch('https://ntfy.sh/goldsale_gpg', {
                 method: 'POST',
                 body: msg,
+                mode: 'no-cors', // E rëndësishme për browser
                 headers: {
                     'Title': 'GPG - SHITJE E RE 🔴',
-                    'Priority': 'high',
-                    'Tags': 'money,star'
+                    'Priority': '5', // Maksimale
+                    'Tags': 'money,rotating_light'
                 }
             });
-            console.log("Ntfy sent!");
+            console.log("Ntfy signal sent!");
         } catch (e) { console.error("Ntfy error", e); }
     }
 
     function checkPass() {
         if(document.getElementById('pass-input').value.toLowerCase() === "kasa") {
-            localStorage.setItem('gpg_auth_ntfy_v1', 'true');
+            localStorage.setItem('gpg_auth_v_ntfy', 'true');
             document.getElementById('login-overlay').style.display='none';
         }
     }
-    if(localStorage.getItem('gpg_auth_ntfy_v1')) document.getElementById('login-overlay').style.display='none';
+    if(localStorage.getItem('gpg_auth_v_ntfy')) document.getElementById('login-overlay').style.display='none';
 
-    _supabase.channel('db').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'inventory' }, payload => {
-        if (payload.new.sold && !payload.old.sold) {
-            sendPushNotification(`${payload.new.kod} (${payload.new.shop})`);
-        }
-        loadData();
-    }).subscribe();
+    // Vetëm bën Refresh të listës
+    _supabase.channel('db').on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, () => loadData()).subscribe();
 
     async function loadData() {
         const { data } = await _supabase.from('inventory').select('*').order('id', { ascending: false });
@@ -171,9 +127,8 @@
         const vel = document.getElementById('res-vel').value;
         if(!kod || !vel) return;
         await _supabase.from('inventory').insert([{
-            shop: document.getElementById('res-shop').value,
-            kod: kod, mm: document.getElementById('res-mm').value,
-            barva: document.getElementById('res-barva').value,
+            shop: document.getElementById('res-shop').value, kod: kod, 
+            mm: document.getElementById('res-mm').value, barva: document.getElementById('res-barva').value,
             vel: vel, sold: false
         }]);
         resetForm(); loadData();
@@ -188,6 +143,21 @@
         editModeId = null; resetForm(); loadData();
     }
 
+    async function sellItem(id) {
+        const item = inventory.find(x => x.id === id);
+        if(confirm("Confirm Sale?")) {
+            const d = new Date();
+            const dateStr = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+            
+            // 1. Dërgo njoftimin direkt
+            sendPush(`Shitje: ${item.kod} (${item.shop}) - Madhësia: ${item.vel}`);
+            
+            // 2. Update databazën
+            await _supabase.from('inventory').update({ sold: true, data_shitjes: dateStr }).eq('id', id);
+            loadData();
+        }
+    }
+
     function startEdit(id) {
         const i = inventory.find(x => x.id === id);
         editModeId = id;
@@ -200,38 +170,17 @@
         window.scrollTo(0,0);
     }
 
-    async function sellItem(id) {
-        if(confirm("Confirm Sale?")) {
-            const d = new Date();
-            const dateStr = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
-            await _supabase.from('inventory').update({ sold: true, data_shitjes: dateStr }).eq('id', id);
-        }
-    }
-
-    async function undoSell(id) {
-        await _supabase.from('inventory').update({ sold: false, data_shitjes: null }).eq('id', id);
-    }
-
-    async function deleteItem(id) {
-        if(confirm("Delete?")) await _supabase.from('inventory').delete().eq('id', id);
-    }
-
-    function resetForm() {
-        document.getElementById('res-kod').value = ''; 
-        document.getElementById('res-mm').value = '';
-        document.getElementById('res-vel').value = ''; 
-        document.getElementById('main-btn').innerText = "+ ADD ITEM";
-    }
+    async function undoSell(id) { await _supabase.from('inventory').update({ sold: false, data_shitjes: null }).eq('id', id); loadData(); }
+    async function deleteItem(id) { if(confirm("Delete?")) await _supabase.from('inventory').delete().eq('id', id); loadData(); }
+    function resetForm() { document.getElementById('res-kod').value = ''; document.getElementById('res-mm').value = ''; document.getElementById('res-vel').value = ''; document.getElementById('main-btn').innerText = "+ ADD ITEM"; }
 
     function render() {
         const targets = ['stock-GPG', 'stock-LBX', 'stock-PALL', 'sold-GPG', 'sold-LBX', 'sold-PALL'];
         targets.forEach(id => document.getElementById(id).innerHTML = '');
-
         inventory.forEach(i => {
             const containerId = (i.sold ? 'sold-' : 'stock-') + i.shop;
             const target = document.getElementById(containerId);
             if(!target) return;
-
             target.innerHTML += `
                 <div class="item-card ${i.barva.toLowerCase()}">
                     <b>${i.kod}</b>
@@ -240,17 +189,11 @@
                     ${i.sold ? `<span class="sold-date">${i.data_shitjes}</span>` : ''}
                     <div class="actions">
                         <button class="btn-act btn-edit" onclick="startEdit(${i.id})">✎</button>
-                        ${!i.sold ? 
-                            `<button class="btn-act btn-sell" onclick="sellItem(${i.id})">SELL</button>` : 
-                            `<button class="btn-act btn-undo" onclick="undoSell(${i.id})">↺</button>
-                             <button class="btn-act btn-del" onclick="deleteItem(${i.id})">X</button>`
-                        }
+                        ${!i.sold ? `<button class="btn-act btn-sell" onclick="sellItem(${i.id})">SELL</button>` : `<button class="btn-act btn-undo" onclick="undoSell(${i.id})">↺</button><button class="btn-act btn-del" onclick="deleteItem(${i.id})">X</button>`}
                     </div>
-                </div>
-            `;
+                </div>`;
         });
     }
-
     loadData();
 </script>
 </body>
