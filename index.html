@@ -8,35 +8,23 @@
     <style>
         :root { --gold: #BF9B30; --bg: #f4f7f6; --card: #ffffff; --text: #2c3e50; --red: #e74c3c; --green: #27ae60; --blue: #3498db; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 14px; padding-bottom: 50px; }
-        
         header { display: flex; justify-content: center; align-items: center; padding: 15px 5px; border-bottom: 2px solid var(--gold); margin-bottom: 15px; background: white; border-radius: 0 0 15px 15px; }
         header h1 { font-size: 1.1rem; color: var(--gold); margin: 0; letter-spacing: 1px; }
-
         .admin-panel { background: var(--card); padding: 15px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #ddd; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         input, select { padding: 11px; border-radius: 8px; border: 1px solid #ccc; width: 100%; font-size: 0.9rem; outline: none; }
-        
         .btn-add { background: var(--gold); color: white; border: none; width: 100%; padding: 13px; border-radius: 10px; font-weight: bold; margin-top: 10px; cursor: pointer; }
-        .btn-test { background: #34495e; color: white; border: none; width: 100%; padding: 5px; border-radius: 5px; margin-top: 10px; font-size: 0.7rem; cursor: pointer; opacity: 0.7; }
-
         .main-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; align-items: start; }
         .column h2 { font-size: 0.7rem; text-align: center; color: white; background: var(--gold); padding: 8px 2px; border-radius: 8px; margin-bottom: 12px; text-transform: uppercase; }
         .column.sold-col h2 { background: var(--red); }
-
         .item-card { background: var(--card); border-radius: 10px; padding: 10px; margin-bottom: 10px; border: 1px solid #eee; position: relative; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .item-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
         .yellow::before { background: #f1c40f; } .white::before { background: #bdc3c7; border: 1px solid #aaa; } .rose::before { background: #e67e22; } .mix::before { background: linear-gradient(to bottom, #f1c40f, #bdc3c7); }
-        
         .item-card b { display: block; font-size: 0.85rem; margin-bottom: 2px; color: #000; }
         .size-tag { font-weight: bold; color: var(--gold); font-size: 0.85rem; margin: 4px 0; background: #fdf9ea; padding: 2px 4px; border-radius: 4px; align-self: flex-start; }
-
         .actions { display: flex; gap: 4px; margin-top: 5px; }
         .btn-act { border: none; padding: 7px 4px; border-radius: 6px; font-size: 0.65rem; font-weight: bold; cursor: pointer; flex: 1; }
-        .btn-sell { background: var(--green); color: white; }
-        .btn-edit { background: #f5f5f5; color: #333; border: 1px solid #ddd; }
-        .btn-undo { background: var(--blue); color: white; }
-        .btn-del { background: var(--red); color: white; }
-
+        .btn-sell { background: var(--green); color: white; } .btn-edit { background: #f5f5f5; color: #333; border: 1px solid #ddd; } .btn-undo { background: var(--blue); color: white; } .btn-del { background: var(--red); color: white; }
         .sold-date { font-size: 0.65rem; color: var(--red); font-weight: bold; display: block; margin-top: 5px; text-align: center; border-top: 1px solid #feebeb; padding-top: 4px; }
     </style>
 </head>
@@ -62,7 +50,6 @@
         <input type="text" id="res-vel" placeholder="Size">
     </div>
     <button class="btn-add" id="main-btn" onclick="handleAction()">+ ADD ITEM</button>
-    <button class="btn-test" onclick="sendPush('PROVË: Njoftimi po punon! 🔔')">🔔 TESTO NJOFTIMIN</button>
 </div>
 
 <div class="main-grid">
@@ -87,14 +74,18 @@
     let inventory = [];
     let editModeId = null;
 
-    // REALTIME lidhja
     _supabase.channel('db-realtime').on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, () => loadData()).subscribe();
 
-    async function sendPush(msg) {
+    async function sendPush(shopID, details) {
+        let titleText = "";
+        if(shopID === "GPG") titleText = "SHITJE E RE GOLD POINT";
+        else if(shopID === "LBX") titleText = "SHITJE E RE MELANTRICHOVA";
+        else if(shopID === "PALL") titleText = "SHITJE E RE NE PALLADIUM";
+
         fetch('https://ntfy.sh/goldsale_gpg', {
             method: 'POST',
-            body: msg,
-            headers: { 'Title': 'GPG ALARM', 'Priority': '5', 'Tags': 'money,rotating_light' }
+            body: details,
+            headers: { 'Title': titleText, 'Priority': '5', 'Tags': 'money,ring' }
         });
     }
 
@@ -129,8 +120,10 @@
 
     async function sellItem(id) {
         const item = inventory.find(x => x.id === id);
-        if(confirm("Confirm Sale for " + item.kod + "?")) {
-            sendPush("🔴 SHITJE: " + item.kod + " (" + item.shop + ") - " + item.vel);
+        if(confirm("Konfirmo shitjen: " + item.kod + "?")) {
+            let details = `Unaza: ${item.kod}\nNgjyra: ${item.barva}\nMM: ${item.mm || 'N/A'}\nMadhësia: ${item.vel}`;
+            sendPush(item.shop, details);
+
             const d = new Date();
             const dateStr = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
             await _supabase.from('inventory').update({ sold: true, data_shitjes: dateStr }).eq('id', id);
@@ -156,7 +149,7 @@
 
     function render() {
         const targets = ['stock-GPG', 'stock-LBX', 'stock-PALL', 'sold-GPG', 'sold-LBX', 'sold-PALL'];
-        targets.forEach(id => document.getElementById(id).innerHTML = '');
+        targets.forEach(id => { if(document.getElementById(id)) document.getElementById(id).innerHTML = ''; });
         inventory.forEach(i => {
             const containerId = (i.sold ? 'sold-' : 'stock-') + i.shop;
             const target = document.getElementById(containerId);
@@ -164,7 +157,7 @@
             target.innerHTML += `
                 <div class="item-card ${i.barva.toLowerCase()}">
                     <b>${i.kod}</b>
-                    <small>${i.barva} ${i.mm ? i.mm+'mm' : ''}</small>
+                    <small>${i.barva} Gold ${i.mm ? i.mm+'mm' : ''}</small>
                     <div class="size-tag">${i.vel}</div>
                     ${i.sold ? `<span class="sold-date">${i.data_shitjes}</span>` : ''}
                     <div class="actions">
