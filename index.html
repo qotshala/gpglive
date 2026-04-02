@@ -12,26 +12,20 @@
         header { display: flex; justify-content: center; align-items: center; padding: 15px 5px; border-bottom: 2px solid var(--gold); margin-bottom: 15px; background: white; border-radius: 0 0 15px 15px; }
         header h1 { font-size: 1.1rem; color: var(--gold); margin: 0; letter-spacing: 1px; }
 
-        /* Form Section */
-        .admin-panel { background: var(--card); padding: 15px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .admin-panel { background: var(--card); padding: 15px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #ddd; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        input, select { padding: 11px; border-radius: 8px; border: 1px solid #ccc; width: 100%; font-size: 0.9rem; outline: none; background: white; }
-        .btn-add { background: var(--gold); color: white; border: none; width: 100%; padding: 13px; border-radius: 10px; font-weight: bold; margin-top: 10px; cursor: pointer; font-size: 1rem; }
+        input, select { padding: 11px; border-radius: 8px; border: 1px solid #ccc; width: 100%; font-size: 0.9rem; outline: none; }
+        
+        .btn-add { background: var(--gold); color: white; border: none; width: 100%; padding: 13px; border-radius: 10px; font-weight: bold; margin-top: 10px; cursor: pointer; }
+        .btn-test { background: #34495e; color: white; border: none; width: 100%; padding: 5px; border-radius: 5px; margin-top: 10px; font-size: 0.7rem; cursor: pointer; opacity: 0.7; }
 
-        /* Grid Layout */
         .main-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; align-items: start; }
-        @media (max-width: 768px) { .main-grid { gap: 5px; } }
-
         .column h2 { font-size: 0.7rem; text-align: center; color: white; background: var(--gold); padding: 8px 2px; border-radius: 8px; margin-bottom: 12px; text-transform: uppercase; }
         .column.sold-col h2 { background: var(--red); }
 
-        /* Item Cards */
         .item-card { background: var(--card); border-radius: 10px; padding: 10px; margin-bottom: 10px; border: 1px solid #eee; position: relative; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .item-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
-        .yellow::before { background: #f1c40f; } 
-        .white::before { background: #bdc3c7; border: 1px solid #aaa; } 
-        .rose::before { background: #e67e22; } 
-        .mix::before { background: linear-gradient(to bottom, #f1c40f, #bdc3c7); }
+        .yellow::before { background: #f1c40f; } .white::before { background: #bdc3c7; border: 1px solid #aaa; } .rose::before { background: #e67e22; } .mix::before { background: linear-gradient(to bottom, #f1c40f, #bdc3c7); }
         
         .item-card b { display: block; font-size: 0.85rem; margin-bottom: 2px; color: #000; }
         .size-tag { font-weight: bold; color: var(--gold); font-size: 0.85rem; margin: 4px 0; background: #fdf9ea; padding: 2px 4px; border-radius: 4px; align-self: flex-start; }
@@ -68,6 +62,7 @@
         <input type="text" id="res-vel" placeholder="Size">
     </div>
     <button class="btn-add" id="main-btn" onclick="handleAction()">+ ADD ITEM</button>
+    <button class="btn-test" onclick="sendPush('PROVË: Njoftimi po punon! 🔔')">🔔 TESTO NJOFTIMIN</button>
 </div>
 
 <div class="main-grid">
@@ -76,9 +71,7 @@
     <div class="column"><h2>PALL STOCK</h2><div id="stock-PALL"></div></div>
 </div>
 
-<div style="margin: 30px 0 10px; text-align: center;">
-    <h3 style="color: var(--red); font-size: 0.9rem; border-top: 2px dashed #ccc; padding-top: 15px;">🔴 SOLD HISTORY</h3>
-</div>
+<div style="margin: 30px 0 10px; text-align: center;"><h3 style="color: var(--red); font-size: 0.9rem; border-top: 2px dashed #ccc; padding-top: 15px;">🔴 SOLD HISTORY</h3></div>
 
 <div class="main-grid">
     <div class="column sold-col"><h2>GPG SOLD</h2><div id="sold-GPG"></div></div>
@@ -94,27 +87,15 @@
     let inventory = [];
     let editModeId = null;
 
-    // --- REALTIME: Që telefoni të përditësohet sapo shet në PC ---
-    _supabase.channel('any-name-here')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, () => {
-            console.log("Ndryshim i detektuar!");
-            loadData();
-        })
-        .subscribe();
+    // REALTIME lidhja
+    _supabase.channel('db-realtime').on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, () => loadData()).subscribe();
 
-    // --- NTFY: Njoftimi Prioritet 5 ---
     async function sendPush(msg) {
-        try {
-            await fetch('https://ntfy.sh/goldsale_gpg', {
-                method: 'POST',
-                body: msg,
-                headers: {
-                    'Title': 'GPG - SHITJE E RE 🔴',
-                    'Priority': '5',
-                    'Tags': 'money,rotating_light'
-                }
-            });
-        } catch (e) { console.error("Ntfy Error:", e); }
+        fetch('https://ntfy.sh/goldsale_gpg', {
+            method: 'POST',
+            body: msg,
+            headers: { 'Title': 'GPG ALARM', 'Priority': '5', 'Tags': 'money,rotating_light' }
+        });
     }
 
     async function loadData() {
@@ -148,10 +129,8 @@
 
     async function sellItem(id) {
         const item = inventory.find(x => x.id === id);
-        if(confirm("Konfirmo shitjen për: " + item.kod + "?")) {
-            // Njoftimi dërgohet në moment
-            sendPush("U SHIT: " + item.kod + " (" + item.shop + ") - Madhësia: " + item.vel);
-            
+        if(confirm("Confirm Sale for " + item.kod + "?")) {
+            sendPush("🔴 SHITJE: " + item.kod + " (" + item.shop + ") - " + item.vel);
             const d = new Date();
             const dateStr = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
             await _supabase.from('inventory').update({ sold: true, data_shitjes: dateStr }).eq('id', id);
@@ -185,7 +164,7 @@
             target.innerHTML += `
                 <div class="item-card ${i.barva.toLowerCase()}">
                     <b>${i.kod}</b>
-                    <small>${i.barva} Gold ${i.mm ? i.mm+'mm' : ''}</small>
+                    <small>${i.barva} ${i.mm ? i.mm+'mm' : ''}</small>
                     <div class="size-tag">${i.vel}</div>
                     ${i.sold ? `<span class="sold-date">${i.data_shitjes}</span>` : ''}
                     <div class="actions">
