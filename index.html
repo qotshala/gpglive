@@ -41,13 +41,13 @@
         /* Layout 3 Kolona */
         .main-grid { 
             display: grid; 
-            grid-template-columns: repeat(3, 1fr); /* 3 Kolona fiks */
+            grid-template-columns: repeat(3, 1fr); 
             gap: 10px; 
             align-items: start;
         }
 
         @media (max-width: 768px) {
-            .main-grid { gap: 5px; } /* Pak më ngushtë në telefon */
+            .main-grid { gap: 5px; }
         }
 
         /* Column Styling */
@@ -65,7 +65,6 @@
             position: relative; overflow: hidden;
             display: flex; flex-direction: column;
         }
-        /* Shiriti i ngjyrës në krah */
         .item-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
         .yellow::before { background: #f1c40f; }
         .white::before { background: #bdc3c7; border: 1px solid #aaa; }
@@ -85,7 +84,6 @@
 
         .sold-date { font-size: 0.65rem; color: var(--red); font-weight: bold; display: block; margin-top: 5px; text-align: center; border-top: 1px solid #feebeb; padding-top: 4px; }
 
-        /* Rregullime për ekrane të vogla fare */
         @media (max-width: 600px) {
             .item-card { padding: 8px 5px; }
             .item-card b { font-size: 0.85rem; }
@@ -154,23 +152,24 @@
     let inventory = [];
     let editModeId = null;
 
-    // --- NTFY.SH SETUP (FALAS) ---
-    const NTFY_TOPIC = "qotshala"; // Kanali yt nga fotoja
+    // --- PUSH TEAM API KEY ---
+    const TEAM_API_KEY = "QedD1nUw$q"; 
 
-    async function sendNtfy(msg) {
+    async function sendPushNotification(msg) {
         try {
-            // Dërgon njoftimin falas në iPhone
-            await fetch(`https://ntfy.sh/${NTFY_TOPIC}`, {
+            await fetch('https://api.pushalert.co/v1/send', {
                 method: 'POST',
-                body: msg,
-                headers: {
-                    'Title': 'GPG - SHITJE E RE 🔴',
-                    'Tags': 'money,red_circle' // Ikona për njoftimin
-                }
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    "api_key": TEAM_API_KEY,
+                    "title": "GPG - SHITJE E RE 🔴",
+                    "message": msg,
+                    "team": true 
+                })
             });
-            console.log("ntfy: OK");
+            console.log("Push Notification Sent");
         } catch (err) {
-            console.error("ntfy: Error", err);
+            console.error("Push Error:", err);
         }
     }
 
@@ -183,12 +182,11 @@
     }
     if(localStorage.getItem('gpg_auth_vfinal_light_ntfy')) document.getElementById('login-overlay').style.display='none';
 
-    // --- REALTIME UPDATES & NTFY ---
+    // --- REALTIME UPDATES & PUSH ---
     _supabase.channel('db').on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, payload => {
-        // Kur 'sold' ndryshon nga false në true
         if (payload.eventType === 'UPDATE' && payload.new.sold && !payload.old.sold) {
-            const tekst = `${payload.new.kod} (${payload.new.shop})`;
-            sendNtfy(tekst); // Aktivizon njoftimin
+            const tekst = `Modeli: ${payload.new.kod} (${payload.new.shop})`;
+            sendPushNotification(tekst); 
         }
         loadData();
     }).subscribe();
