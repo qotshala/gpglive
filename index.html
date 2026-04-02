@@ -86,32 +86,30 @@
     let inventory = [];
     let editModeId = null;
 
-    // --- FUNKSIONI I NJOFTIMIT (I rregulluar) ---
+    // --- FUNKSIONI I NJOFTIMIT (PRIORITY 5) ---
     async function sendPush(msg) {
         try {
             await fetch('https://ntfy.sh/goldsale_gpg', {
                 method: 'POST',
                 body: msg,
-                mode: 'no-cors', // E rëndësishme për browser
                 headers: {
                     'Title': 'GPG - SHITJE E RE 🔴',
-                    'Priority': '5', // Maksimale
-                    'Tags': 'money,rotating_light'
+                    'Priority': '5',
+                    'Tags': 'money,rotating_light,star'
                 }
             });
-            console.log("Ntfy signal sent!");
-        } catch (e) { console.error("Ntfy error", e); }
+            console.log("Signal sent to ntfy!");
+        } catch (e) { console.error(e); }
     }
 
     function checkPass() {
         if(document.getElementById('pass-input').value.toLowerCase() === "kasa") {
-            localStorage.setItem('gpg_auth_v_ntfy', 'true');
+            localStorage.setItem('gpg_auth_v_final', 'true');
             document.getElementById('login-overlay').style.display='none';
         }
     }
-    if(localStorage.getItem('gpg_auth_v_ntfy')) document.getElementById('login-overlay').style.display='none';
+    if(localStorage.getItem('gpg_auth_v_final')) document.getElementById('login-overlay').style.display='none';
 
-    // Vetëm bën Refresh të listës
     _supabase.channel('db').on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, () => loadData()).subscribe();
 
     async function loadData() {
@@ -145,14 +143,12 @@
 
     async function sellItem(id) {
         const item = inventory.find(x => x.id === id);
-        if(confirm("Confirm Sale?")) {
+        if(confirm("Confirm Sale for " + item.kod + "?")) {
+            // 1. Dërgo njoftimin në sekondë (Priority 5)
+            sendPush("U SHIT: " + item.kod + " (" + item.shop + ") - Madhësia: " + item.vel);
+            
             const d = new Date();
             const dateStr = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
-            
-            // 1. Dërgo njoftimin direkt
-            sendPush(`Shitje: ${item.kod} (${item.shop}) - Madhësia: ${item.vel}`);
-            
-            // 2. Update databazën
             await _supabase.from('inventory').update({ sold: true, data_shitjes: dateStr }).eq('id', id);
             loadData();
         }
@@ -198,4 +194,3 @@
 </script>
 </body>
 </html>
- 
