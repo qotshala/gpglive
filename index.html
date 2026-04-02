@@ -30,12 +30,10 @@
         header { display: flex; justify-content: center; align-items: center; padding: 15px 5px; border-bottom: 2px solid var(--gold); margin-bottom: 15px; background: white; border-radius: 0 0 15px 15px; }
         header h1 { font-size: 1.1rem; color: var(--gold); margin: 0; letter-spacing: 1px; }
 
-        /* Form */
         .admin-panel { background: var(--card); padding: 15px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #ddd; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         input, select { padding: 11px; border-radius: 8px; border: 1px solid #ccc; width: 100%; font-size: 0.9rem; outline: none; }
-        .btn-add { background: var(--gold); color: white; border: none; width: 100%; padding: 13px; border-radius: 10px; font-weight: bold; margin-top: 10px; font-size: 0.95rem; cursor: pointer; transition: 0.2s; }
-        .btn-update { background: var(--blue); color: white; }
+        .btn-add { background: var(--gold); color: white; border: none; width: 100%; padding: 13px; border-radius: 10px; font-weight: bold; margin-top: 10px; font-size: 0.95rem; cursor: pointer; }
 
         /* Layout 3 Kolona */
         .main-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; align-items: start; }
@@ -129,34 +127,33 @@
     let inventory = [];
     let editModeId = null;
 
-    // --- PUSH NOTIFICATION SETUP ---
-    const PUSH_KEY = "572383a2-d33a-4a9b-8e3a-3529d40579ce";
-
-    async function sendPush(msg) {
+    // --- NTFY.SH CONFIGURATION ---
+    async function sendPushNotification(msg) {
         try {
-            await fetch('https://api.pushalert.co/v1/send', {
+            await fetch('https://ntfy.sh/goldsale_gpg', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    "api_key": PUSH_KEY,
-                    "title": "GPG - SHITJE 🔴",
-                    "message": msg
-                })
+                body: msg,
+                headers: {
+                    'Title': 'GPG - SHITJE E RE 🔴',
+                    'Priority': 'high',
+                    'Tags': 'money,star'
+                }
             });
-        } catch (e) { console.error(e); }
+            console.log("Ntfy sent!");
+        } catch (e) { console.error("Ntfy error", e); }
     }
 
     function checkPass() {
         if(document.getElementById('pass-input').value.toLowerCase() === "kasa") {
-            localStorage.setItem('gpg_auth_vfinal_push', 'true');
+            localStorage.setItem('gpg_auth_ntfy_v1', 'true');
             document.getElementById('login-overlay').style.display='none';
         }
     }
-    if(localStorage.getItem('gpg_auth_vfinal_push')) document.getElementById('login-overlay').style.display='none';
+    if(localStorage.getItem('gpg_auth_ntfy_v1')) document.getElementById('login-overlay').style.display='none';
 
-    _supabase.channel('db').on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, payload => {
-        if (payload.eventType === 'UPDATE' && payload.new.sold && !payload.old.sold) {
-            sendPush(`${payload.new.kod} (${payload.new.shop})`);
+    _supabase.channel('db').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'inventory' }, payload => {
+        if (payload.new.sold && !payload.old.sold) {
+            sendPushNotification(`${payload.new.kod} (${payload.new.shop})`);
         }
         loadData();
     }).subscribe();
